@@ -1,0 +1,72 @@
+---
+description: SFDC agent swarm resolves project folder and default org automatically
+globs:
+  - "**/sfdx-project.json"
+  - "**/.sf/config.json"
+  - "**/force-app/**"
+  - "**/Master/**"
+alwaysApply: false
+---
+
+# SFDC Agent Swarm (all projects)
+
+The multi-agent framework lives in [Agency-Swarm](https://github.com/lparuchuru-titan/Agency-Swarm) (install via `scripts/install-to-project.sh` or `./install.sh`).
+
+## Before deploy / retrieve / orchestrator / skill refresh
+
+```bash
+sfdc-swarm context
+# or: python3 ~/.cursor/skills/_shared/show-context.py
+```
+
+Use resolved values — never hardcode org aliases:
+
+| Field | Use |
+|-------|-----|
+| `targetOrgAlias` | Every `sf` command (`--target-org`) |
+| `sourcePath` | Package root (`force-app/main/default` or `Master/main/default`) |
+| `projectRoot` | Repo root for paths and KB |
+
+Org priority: project `.sf/config.json` → optional `.cursor/sfdc-project/config.json` → `sf config get`.
+
+## Per-project files (optional)
+
+| Path | Purpose |
+|------|---------|
+| `.cursor/sfdc-project/config.json` | Jira epic, optional org override |
+| `.cursor/swarm/project-topics.json` | Project-specific KB topic stubs |
+| `knowledge-base/` | Per-project codebase + connected indexes |
+| `.cursor/swarm/.fleet/` | FleetView run state |
+
+Shared across all projects: `~/.cursor/sfdc-knowledge-swarm/knowledge-base/sfdc/` (public Salesforce docs).
+
+This framework does **not** run automatically on every Cursor chat message.
+
+| Trigger | What runs |
+|---------|-----------|
+| FleetView **Run orchestrator** | Full LangGraph pipeline |
+| `sfdc-swarm orchestrate "…"` | Same, from terminal |
+| Scheduled skill refresh | KB/index only (usually $0) |
+| **Normal Cursor chat** | Your Cursor agent only — unless you ask it to run the swarm |
+
+To use from Cursor chat, say explicitly: *"Run the orchestrator for …"* or *"Use sfdc-swarm orchestrate …"*
+
+## Agency Swarm-style Cursor template
+
+Plain-English CEO delegation (Agency Swarm pattern adapted for Cursor):
+
+| Path | Purpose |
+|------|---------|
+| `AGENTS.md` | Agency entry point (read first) |
+| `.cursor/agency/agency_manifesto.md` | Shared rules for all agents |
+| `.cursor/agency/agency_chart.md` | Who delegates to whom |
+| `.cursor/agency/<agent>/instructions.md` | Per-specialist role, goals, workflow |
+| `.cursor/rules/agency-swarm-cursor.mdc` | CEO rule — **Apply Intelligently** (rich `description`, no globs) |
+| `.cursor/rules/agency-swarm-salesforce-files.mdc` | Auto-attach when editing `force-app/`, `manifest/`, agents |
+| `.cursor/agents/ceo.md` | CEO subagent for Task tool |
+
+Regenerate after registry changes: `python3 tools/sfdc-knowledge-swarm/agency_cursor_sync.py`
+
+## Metadata edits (retrieve first)
+
+Before changing any `force-app/` metadata: **retrieve latest from org**, then apply changes on top. See `.cursor/rules/sfdc-metadata-retrieve-first.mdc`.

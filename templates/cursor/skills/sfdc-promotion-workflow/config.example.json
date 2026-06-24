@@ -1,0 +1,13 @@
+{
+  "_comment": "Optional overrides. Project + org auto-detected from folder and sf CLI.",
+  "targetOrgAlias": null,
+  "promotionRepoRoot": null,
+  "promotionSourcePath": null,
+  "promotionRemote": "origin",
+  "defaultBaseBranch": "NextGenDev",
+  "defaultPrTargetBranch": "NextGenDev",
+  "jiraProjectKey": "SFDCLQ",
+  "parentStoryKey": null,
+  "currentEpic": null,
+  "currentEpicTitle": null
+}

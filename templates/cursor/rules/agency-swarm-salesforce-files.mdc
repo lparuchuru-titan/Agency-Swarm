@@ -1,0 +1,17 @@
+---
+description: Auto-attach agency CEO hint when editing Salesforce metadata in this repo
+globs:
+  - "**/force-app/**"
+  - "**/Master/**"
+  - "**/manifest/**"
+  - ".cursor/agents/**"
+alwaysApply: false
+---
+
+# Agency context (file-scoped)
+
+You are in the NEXTGEN2 Salesforce DX repo. For **multi-step or cross-surface work** (not a one-line typo), act as **CEO**: break down and delegate via subagents per `AGENTS.md` and rule `agency-swarm-cursor`.
+
+Single-file, obvious edits in the open file can be done directly without delegation.
+
+Before `sf` commands: `sfdc-swarm context` → use `targetOrgAlias`.

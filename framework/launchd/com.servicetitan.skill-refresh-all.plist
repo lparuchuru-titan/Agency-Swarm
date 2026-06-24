@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.servicetitan.skill-refresh-all</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/lakshmikanthparuchuru/.cursor/sfdc-knowledge-swarm/launchd/run-skill-refresh-all-projects.sh</string>
+    </array>
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>2</integer>
+        <key>Minute</key>
+        <integer>5</integer>
+    </dict>
+    <key>RunAtLoad</key>
+    <false/>
+    <key>StandardOutPath</key>
+    <string>/Users/lakshmikanthparuchuru/.cursor/sfdc-knowledge-swarm/skill-refresh-all.launchd.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/lakshmikanthparuchuru/.cursor/sfdc-knowledge-swarm/skill-refresh-all.launchd.err.log</string>
+</dict>
+</plist>

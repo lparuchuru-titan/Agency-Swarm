@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Building an SFDC Agent Swarm for Cursor — Blog &amp; Implementation Guide</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>window.addEventListener('DOMContentLoaded',function(){if(window.mermaid){try{mermaid.initialize({startOnLoad:true,theme:'neutral',securityLevel:'loose'});}catch(e){}}});</script>
+<style>
+  :root{--ink:#0f2b2e;--slate:#33484b;--muted:#6a7f82;--line:#dfe7e7;--teal:#0e7c86;--teal-d:#0a5b63;
+    --amber:#b9770e;--red:#b3261e;--green:#1f7a3d;--violet:#5b4b8a;--bg:#f6f8f8;--card:#fff;--code:#0b3a40}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:820px;margin:0 auto;padding:32px 24px 90px}
+  header.hero{background:linear-gradient(135deg,#1a1a2e,#0e7c86);color:#fff;border-radius:16px;padding:36px 38px;margin-bottom:28px;box-shadow:0 8px 28px rgba(10,91,99,.25)}
+  header.hero h1{margin:0 0 10px;font-size:32px;line-height:1.25;font-weight:700}
+  header.hero .subtitle{margin:0;opacity:.92;font-size:17px;line-height:1.5}
+  .byline{margin-top:18px;font-size:14px;opacity:.85}
+  .pill{display:inline-block;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:999px;padding:4px 12px;font-size:12px;margin-top:14px;margin-right:6px}
+  nav.toc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 20px;margin-bottom:24px;font-size:14px}
+  nav.toc b{color:var(--teal-d)} nav.toc a{color:var(--slate);text-decoration:none;margin-right:14px;white-space:nowrap;line-height:2}
+  nav.toc a:hover{color:var(--teal);text-decoration:underline}
+  h2{margin:44px 0 12px;font-size:26px;color:var(--teal-d);border-bottom:2px solid var(--line);padding-bottom:8px;scroll-margin-top:14px}
+  h3{margin:28px 0 10px;font-size:19px;color:var(--slate)}
+  p{margin:14px 0}
+  p.lead{font-size:19px;color:var(--slate);line-height:1.65}
+  code{background:#eef3f4;color:var(--code);padding:2px 7px;border-radius:5px;font-size:14px;font-family:"SF Mono",Menlo,Consolas,monospace}
+  pre.code{background:var(--code);color:#dff1f2;border-radius:10px;padding:16px;overflow:auto;font-size:13px;line-height:1.55;margin:16px 0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 24px;margin:18px 0;box-shadow:0 1px 3px rgba(15,43,46,.05)}
+  .tldr{border-left:5px solid var(--teal);background:#eef7f8}
+  .callout{border-left:5px solid var(--amber);background:#fdf6ec;padding:14px 20px;border-radius:8px;margin:18px 0}
+  .tip{border-left:5px solid var(--green);background:#eefaf2;padding:14px 20px;border-radius:8px;margin:18px 0}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:#eef3f4;color:var(--slate);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.4px}
+  tr:last-child td{border-bottom:none}
+  figure{margin:24px 0;text-align:center}
+  figure img{max-width:100%;border-radius:12px;border:1px solid var(--line);box-shadow:0 4px 20px rgba(15,43,46,.12)}
+  figcaption{font-size:13px;color:var(--muted);margin-top:10px;line-height:1.5}
+  pre.mermaid{background:#fff;border:1px dashed var(--line);border-radius:12px;padding:16px;text-align:center;overflow:auto;margin:18px 0}
+  ul.tight li{margin:6px 0}
+  ol.tight li{margin:8px 0}
+  footer{margin-top:50px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+  .when-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0}
+  @media(max-width:680px){.when-grid{grid-template-columns:1fr}}
+  .when-box{border:1px solid var(--line);border-radius:10px;padding:16px;background:#fff}
+  .when-box h4{margin:0 0 8px;font-size:15px}
+  .when-box.yes{border-left:4px solid var(--green)}
+  .when-box.no{border-left:4px solid var(--red)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <h1>Building an SFDC Agent Swarm for Cursor</h1>
+  <p class="subtitle">How we turned a large Salesforce DX monorepo into a multi-agent agency — with a live FleetView dashboard, token-aware knowledge refresh, and plain-English delegation.</p>
+  <div class="byline">ServiceTitan · NEXTGEN2 · June 2026</div>
+  <div>
+    <span class="pill">Cursor IDE</span>
+    <span class="pill">Agency Swarm pattern</span>
+    <span class="pill">LangGraph orchestrator</span>
+    <span class="pill">Salesforce CPQ</span>
+  </div>
+</header>
+
+<nav class="toc">
+  <b>Contents:</b>
+  <a href="#problem">The problem</a>
+  <a href="#what">What we built</a>
+  <a href="#when">When to use it</a>
+  <a href="#how">How to use it</a>
+  <a href="#fleet">FleetView</a>
+  <a href="#implement">How to implement</a>
+  <a href="#architecture">Architecture</a>
+  <a href="#lessons">Lessons learned</a>
+</nav>
+
+<p class="lead">If you work on a mature Salesforce org — thousands of Apex classes, CPQ, custom LWCs, Jira epics, and multiple sandboxes — a single AI chat thread stops scaling fast. We built an <b>SFDC Agent Swarm</b>: a CEO-style orchestrator in Cursor, specialist agents with skills, a LangGraph planning pipeline, and a local FleetView dashboard so humans can see what the swarm knows and what it is doing.</p>
+
+<h2 id="problem">The problem we were solving</h2>
+<p>Our NEXTGEN2 repo is a real production-scale Salesforce project: ~1,700 Apex classes, 90+ LWCs, CPQ, billing, provisioning, and a new Pantheon bundle model. Developers were already using Cursor, but:</p>
+<ul class="tight">
+  <li>Every session started cold — no shared memory of org context, Jira AC, or repo conventions.</li>
+  <li>One agent tried to do everything: Jira, architecture, Apex, deploy, QA, docs.</li>
+  <li>Knowledge scattered across Confluence, Google Sheets, Jira, and local explainers.</li>
+  <li>No visibility into which “skills” were stale or which specialist should handle a request.</li>
+</ul>
+<p>We wanted something closer to an <b>agency</b>: a lead who routes work, specialists who stay in their lane, and a knowledge layer that refreshes without burning tokens every day.</p>
+
+<h2 id="what">What we built</h2>
+<div class="card tldr">
+  Three layers work together:
+  <ol class="tight">
+    <li><b>Cursor Agency</b> — CEO rule + specialist subagents (<code>.cursor/agency/</code>, <code>AGENTS.md</code>)</li>
+    <li><b>Knowledge Swarm</b> — scans <code>force-app/</code>, indexes Jira/Confluence, syncs skill feeds</li>
+    <li><b>LangGraph Orchestrator</b> — plans multi-step delivery, writes work orders, publishes delivery summaries</li>
+  </ol>
+  A local dashboard — <b>FleetView</b> — ties it together at <code>http://127.0.0.1:8765</code>.
+</div>
+
+<pre class="mermaid">
+flowchart TB
+  User["Developer in Cursor"] --> CEO["CEO rule / agency-swarm-cursor"]
+  CEO --> Jira["jira-subtask-workflow"]
+  CEO --> Dev["advanced-salesforce-developer"]
+  CEO --> Arch["sfdc-cta-mentor"]
+  CEO --> Sync["sfdc-metadata-sync"]
+  CEO --> Promo["sfdc-promotion-workflow"]
+  CEO --> QA["playwright-e2e-validation"]
+  CEO --> Docs["codebase-explainer"]
+  Orch["sfdc-swarm orchestrate"] --> Plan["LangGraph plan + dispatch"]
+  Plan --> WO["Work orders in .fleet/runs/"]
+  WO --> Dev
+  KB["Knowledge Swarm"] --> Skills["~/.cursor/skills/"]
+  KB --> Fleet["FleetView dashboard"]
+</pre>
+
+<h3>Specialist roster</h3>
+<table>
+  <thead><tr><th>Agent</th><th>When it owns the work</th></tr></thead>
+  <tbody>
+    <tr><td><code>jira-subtask-workflow</code></td><td>Reading epics/stories, creating Dev Task + PDS subtasks, tracking AC</td></tr>
+    <tr><td><code>advanced-salesforce-developer</code></td><td>Apex, LWC, CPQ, triggers, bulkification, deploy prep</td></tr>
+    <tr><td><code>sfdc-cta-mentor</code></td><td>Architecture blueprints, LDV, integration trade-offs</td></tr>
+    <tr><td><code>sfdc-metadata-sync</code></td><td>Retrieve-first, delta sync, manifest hygiene</td></tr>
+    <tr><td><code>sfdc-promotion-workflow</code></td><td>Sandbox → UAT promotion, SFDC-CRM-SFDX handoff</td></tr>
+    <tr><td><code>codebase-explainer</code></td><td>HTML deep dives, architecture docs, teaching</td></tr>
+    <tr><td><code>playwright-e2e-validation</code></td><td>Playwright E2E, LWC Jest, Apex test runs</td></tr>
+  </tbody>
+</table>
+
+<h2 id="when">When to use the swarm</h2>
+<div class="when-grid">
+  <div class="when-box yes">
+    <h4>Use the swarm when…</h4>
+    <ul class="tight">
+      <li>A Jira epic spans metadata + Apex + LWC + manual data steps</li>
+      <li>You need retrieve → implement → test → promote with traceability</li>
+      <li>You want structured work orders before coding (orchestrator run)</li>
+      <li>Onboarding someone to a large repo — run codebase KB refresh first</li>
+      <li>You want HTML explainers or architecture docs from live code + Jira</li>
+      <li>Multiple sandboxes / org aliases — context must come from project config</li>
+    </ul>
+  </div>
+  <div class="when-box no">
+    <h4>Skip the swarm when…</h4>
+    <ul class="tight">
+      <li>One-line typo fix in a single open file</li>
+      <li>Quick SOQL or a single Apex method tweak you already understand</li>
+      <li>Production deploy without sandbox validation (swarm still needs human approval)</li>
+      <li>You only need a chat answer with no repo or org context</li>
+    </ul>
+  </div>
+</div>
+
+<div class="callout">
+  <b>Rule of thumb:</b> If you would ask a tech lead to “break this down and assign it,” use the CEO + orchestrator. If you would ask a teammate “what does this line do?”, stay in a single Cursor chat.
+</div>
+
+<h2 id="how">How to use it (day to day)</h2>
+
+<h3>1. Plain English in Cursor (most common)</h3>
+<p>Open Cursor chat and describe the task like you would to a project lead:</p>
+<pre class="code">Implement Pantheon bundle view for SFDCLQ-7591.
+Retrieve latest catalogModal from NEXTGEN2, match Jira AC, then prepare promotion notes.</pre>
+<p>The <code>agency-swarm-cursor</code> rule (Apply Intelligently) acts as CEO and delegates to specialists. Editing files under <code>force-app/</code> auto-attaches the Salesforce agency context.</p>
+<p>Force CEO mode anytime: <code>@agency-swarm-cursor</code></p>
+
+<h3>2. Resolve org context first</h3>
+<p>Never hardcode org aliases. Always:</p>
+<pre class="code">sfdc-swarm context</pre>
+<p>This reads <code>.sf/config.json</code> in the project and prints <code>targetOrgAlias</code>, source path, and project root.</p>
+
+<h3>3. Run the orchestrator for multi-step delivery</h3>
+<pre class="code">sfdc-swarm orchestrate "Implement MAX bundle QCP changes and document verification steps"</pre>
+<p>Output lands in:</p>
+<ul class="tight">
+  <li><code>.cursor/swarm/.fleet/runs/&lt;run_id&gt;/</code> — PLAN, work orders per team</li>
+  <li><code>docs/swarm-deliveries/&lt;run_id&gt;-delivery.md</code> — human-readable summary</li>
+</ul>
+<p>Open the work order (e.g. <code>work-apex-developer.md</code>) and launch the matching Cursor subagent with that file as context.</p>
+
+<h3>4. Refresh knowledge (token-aware)</h3>
+<table>
+  <thead><tr><th>Tier</th><th>Command</th><th>Cost</th></tr></thead>
+  <tbody>
+    <tr><td>Daily</td><td><code>sfdc-swarm skill-refresh --tier daily</code></td><td>0 LLM tokens — static codebase scan</td></tr>
+    <tr><td>Weekly</td><td><code>sfdc-swarm skill-refresh --tier weekly</code></td><td>0 tokens — Jira/Confluence indexes via MCP checklists</td></tr>
+    <tr><td>Monthly</td><td><code>sfdc-swarm skill-refresh --tier open_deep</code></td><td>Low — stale-topic LLM synthesis only</td></tr>
+  </tbody>
+</table>
+
+<h3>5. Quick command reference</h3>
+<table>
+  <thead><tr><th>Command</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td><code>sfdc-swarm serve</code></td><td>Start FleetView at port 8765</td></tr>
+    <tr><td><code>sfdc-swarm context</code></td><td>Show project org + paths</td></tr>
+    <tr><td><code>sfdc-swarm orchestrate "…"</code></td><td>LangGraph supervisor pipeline</td></tr>
+    <tr><td><code>sfdc-swarm skill-refresh --tier weekly</code></td><td>Refresh skill ↔ KB links</td></tr>
+    <tr><td><code>python3 tools/sfdc-knowledge-swarm/agency_cursor_sync.py</code></td><td>Regenerate agency folders from registry</td></tr>
+  </tbody>
+</table>
+
+<h2 id="fleet">FleetView — the live dashboard</h2>
+<p>FleetView is a local HTTP server (<code>serve_fleet.py</code>) that shows swarm health, skill feed coverage, active agents, orchestrator runs, and KB progress. It does <b>not</b> call Cursor APIs — it is the human control plane.</p>
+
+<figure>
+  <img src="assets/swarm-blog/01-skills-fleet.png" alt="FleetView Skills and Agents dashboard showing skill cards, MCP integrations, and feed freshness" width="820">
+  <figcaption><b>Skills &amp; Agents view</b> — each Cursor skill shows which knowledge-base feeds, connected indexes (Jira, Confluence, Drive), and MCP tools it can use. Stale feeds highlight in red.</figcaption>
+</figure>
+
+<figure>
+  <img src="assets/swarm-blog/02-orchestrator-dashboard.png" alt="FleetView Orchestrator dashboard with supervisor pipeline, run history, and Run Orchestrator control" width="820">
+  <figcaption><b>Orchestrator view</b> — enter a natural-language request, run the LangGraph supervisor, and inspect pipeline stages (requirements → design → dev → admin → QA → docs).</figcaption>
+</figure>
+
+<div class="tip">
+  <b>Start FleetView:</b> <code>sfdc-swarm serve</code> then open <code>http://127.0.0.1:8765/skills-fleet.html</code>. Leave the terminal open while using it. Stop with: <code>lsof -ti:8765 | xargs kill -9</code>
+</div>
+
+<h2 id="implement">How to implement this in your own Salesforce project</h2>
+<p>The framework is designed to be <b>global</b> (one install) and <b>per-project</b> (each DX repo gets its own KB and fleet state).</p>
+
+<h3>Step 1 — Install the global framework (once per machine)</h3>
+<pre class="code">cd tools/sfdc-knowledge-swarm
+./install-global.sh
+pip install -r requirements.txt</pre>
+<p>This copies the swarm to <code>~/.cursor/sfdc-knowledge-swarm</code> and adds the <code>sfdc-swarm</code> CLI to <code>~/.local/bin</code>.</p>
+
+<h3>Step 2 — Copy agency template into your DX repo</h3>
+<p>Your repo needs:</p>
+<pre class="code">AGENTS.md                          # agency entry point
+.cursor/agency/                    # manifesto, chart, per-agent instructions
+.cursor/agents/*.md                # Cursor subagent definitions
+.cursor/rules/agency-swarm-cursor.mdc
+.cursor/rules/agency-swarm-salesforce-files.mdc
+tools/sfdc-knowledge-swarm/        # project-local copy (or symlink to global)
+knowledge-base/                    # per-project KB output
+.cursor/swarm/.fleet/              # run state</pre>
+
+<h3>Step 3 — Define specialists in the registry</h3>
+<p>Edit <code>tools/sfdc-knowledge-swarm/agents_registry.py</code> — map teams, agents, Cursor subagent names, skills, and MCP tools. Then sync:</p>
+<pre class="code">python3 tools/sfdc-knowledge-swarm/agency_cursor_sync.py</pre>
+
+<h3>Step 4 — Wire Cursor rules</h3>
+<ul class="tight">
+  <li>Set <code>agency-swarm-cursor.mdc</code> to <b>Apply Intelligently</b> (not Manual)</li>
+  <li><code>agency-swarm-salesforce-files.mdc</code> auto-attaches on <code>force-app/</code> edits</li>
+  <li>Add global skills under <code>~/.cursor/skills/</code> (advanced-salesforce-developer, sfdc-metadata-sync, etc.)</li>
+</ul>
+
+<h3>Step 5 — Configure org resolution</h3>
+<p>Each project resolves its default org from <code>.sf/config.json</code>. Optional overrides in <code>.cursor/sfdc-project/config.json</code>. The CEO and all skills must call <code>sfdc-swarm context</code> — never hardcode <code>NEXTGEN2</code> or record IDs.</p>
+
+<h3>Step 6 — Optional: scheduled refresh (macOS launchd)</h3>
+<pre class="code">cp tools/sfdc-knowledge-swarm/launchd/com.servicetitan.skill-refresh-daily.plist ~/Library/LaunchAgents/
+launchctl load ~/Library/LaunchAgents/com.servicetitan.skill-refresh-daily.plist</pre>
+<p>Daily = free static scan. Weekly = connected indexes. Monthly = small LLM budget for stale topics only.</p>
+
+<h3>Step 7 — Optional: MCP integrations</h3>
+<p>Connect Atlassian + Google Workspace MCP in Cursor for live Jira/Confluence/Sheets reads. The requirements team briefs reference these; without credentials, the swarm writes MCP checklists instead.</p>
+
+<h2 id="architecture">Architecture (two modes)</h2>
+<table>
+  <thead><tr><th>Mode</th><th>Entry</th><th>Graph</th><th>Output</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>Supervisor orchestrator</b></td>
+      <td><code>sfdc-swarm orchestrate</code> or FleetView Run Orchestrator</td>
+      <td>plan → dispatch (requirements → design → dev → admin → QA → docs) → finalize</td>
+      <td>Work orders + <code>docs/swarm-deliveries/*.md</code></td>
+    </tr>
+    <tr>
+      <td><b>Codebase KB swarm</b></td>
+      <td><code>sfdc-swarm dev-once</code> or FleetView Run Swarm</td>
+      <td>plan → ui_ux → sf_dev → sf_admin → index</td>
+      <td><code>knowledge-base/codebase/*.md</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<p><b>Important design choice:</b> Python LangGraph is the <em>planning plane</em>. Apex/LWC edits, deploys, and tests happen in <em>Cursor</em> via subagents and skills. The orchestrator produces structured handoffs — it does not replace the IDE.</p>
+
+<pre class="mermaid">
+sequenceDiagram
+  participant Dev as Developer
+  participant Fleet as FleetView
+  participant Orch as LangGraph Orchestrator
+  participant Cursor as Cursor + Subagents
+  participant Org as Salesforce Org
+
+  Dev->>Fleet: Run orchestrator with Jira epic
+  Fleet->>Orch: POST /api/orchestrate
+  Orch->>Orch: plan + dispatch teams
+  Orch-->>Dev: work-apex-developer.md, qa-*.md
+  Dev->>Cursor: Launch advanced-salesforce-developer
+  Cursor->>Org: retrieve / deploy (with approval)
+  Cursor-->>Dev: code + tests + HTML explainer
+</pre>
+
+<h2 id="lessons">Lessons learned</h2>
+<div class="card">
+  <ul class="tight">
+    <li><b>CEO delegation beats mega-prompts.</b> Specialists with narrow skills produce safer Salesforce code (bulkification, FLS, retrieve-first).</li>
+    <li><b>Token-aware refresh matters.</b> Daily static scans cost zero LLM tokens; reserve LLM for stale or ambiguous topics only.</li>
+    <li><b>FleetView builds trust.</b> Developers adopt agents faster when they can see feed freshness and run history locally.</li>
+    <li><b>Org context must be automatic.</b> Hardcoded aliases caused more deploy mistakes than any agent hallucination.</li>
+    <li><b>Work orders bridge planning and coding.</b> The orchestrator’s markdown artifacts are the contract between “what to do” and “do it in Cursor.”</li>
+    <li><b>Inspired by Agency Swarm.</b> We adapted the <a href="https://agency-swarm.ai/welcome/getting-started/cursor-ide">Agency Swarm + Cursor</a> pattern for Salesforce delivery realities (CPQ, promotion repos, sandbox tracking).</li>
+  </ul>
+</div>
+
+<h3>Publishing this blog</h3>
+<p>This page is self-contained HTML with embedded screenshots under <code>docs/explainers/assets/swarm-blog/</code>. To publish:</p>
+<ol class="tight">
+  <li>Copy the HTML + <code>assets/swarm-blog/</code> folder to your internal wiki or static site.</li>
+  <li>Or export to PDF from the browser (Print → Save as PDF).</li>
+  <li>For Confluence: paste sections; upload the two PNG screenshots to the page.</li>
+</ol>
+
+<footer>
+  <p><b>Path:</b> <code>docs/explainers/20260624-sfdc-agent-swarm-blog.html</code></p>
+  <p><b>Repo:</b> NEXTGEN2 · <code>tools/sfdc-knowledge-swarm/</code> · <code>AGENTS.md</code></p>
+  <p>Generated 2026-06-24 · SFDC Agent Swarm blog &amp; implementation guide</p>
+</footer>
+
+</div>
+</body>
+</html>

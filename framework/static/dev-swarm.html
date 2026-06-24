@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SFDC Agent Fleet</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --bg-elevated: #12121a;
+      --surface: #16161f;
+      --surface-hover: #1c1c28;
+      --border: rgba(255,255,255,.08);
+      --border-strong: rgba(255,255,255,.12);
+      --text: #f4f4f5;
+      --muted: #a1a1aa;
+      --dim: #71717a;
+      --accent: #6366f1;
+      --accent-soft: rgba(99,102,241,.15);
+      --cyan: #22d3ee;
+      --green: #34d399;
+      --amber: #fbbf24;
+      --red: #f87171;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --shadow: 0 4px 24px rgba(0,0,0,.4);
+    }
+    * { box-sizing: border-box; margin: 0; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .app { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+    @media (max-width: 900px) { .app { grid-template-columns: 1fr; } .sidebar { display: none; } }
+
+    .sidebar {
+      background: var(--bg-elevated);
+      border-right: 1px solid var(--border);
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .logo { font-weight: 700; font-size: 1rem; display: flex; align-items: center; gap: .5rem; }
+    .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+    .nav-label { font-size: .65rem; text-transform: uppercase; letter-spacing: .08em; color: var(--dim); margin-bottom: .5rem; }
+    .ctx-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: .85rem;
+      font-size: .78rem;
+    }
+    .ctx-card strong { display: block; font-size: .82rem; margin-bottom: .35rem; }
+    .ctx-row { color: var(--muted); margin-top: .25rem; }
+    .ctx-row code { font-family: 'JetBrains Mono', monospace; font-size: .72rem; color: var(--cyan); }
+
+    .cost-card {
+      background: linear-gradient(135deg, rgba(99,102,241,.12), rgba(34,211,238,.08));
+      border: 1px solid rgba(99,102,241,.25);
+      border-radius: var(--radius-lg);
+      padding: 1rem;
+    }
+    .cost-label { font-size: .65rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+    .cost-value { font-size: 1.75rem; font-weight: 700; font-variant-numeric: tabular-nums; margin: .25rem 0; }
+    .cost-sub { font-size: .72rem; color: var(--dim); }
+    .cost-bar { height: 4px; background: var(--border); border-radius: 99px; margin-top: .75rem; overflow: hidden; }
+    .cost-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--cyan)); width: 0%; transition: width .4s; }
+
+    .info-note {
+      font-size: .72rem; color: var(--muted); line-height: 1.45;
+      padding: .75rem; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border);
+    }
+
+    .main { padding: 1.25rem 1.5rem 2rem; max-width: 1280px; }
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+      margin-bottom: 1.25rem; flex-wrap: wrap;
+    }
+    .topbar h1 { font-size: 1.25rem; font-weight: 600; }
+    .badges { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+    .badge {
+      padding: .3rem .65rem; border-radius: 999px; font-size: .68rem; font-weight: 600;
+      border: 1px solid var(--border); background: var(--surface);
+    }
+    .badge.live { border-color: rgba(52,211,153,.4); color: var(--green); background: rgba(52,211,153,.1); }
+    .badge.idle { color: var(--dim); }
+    .badge.run { border-color: rgba(96,165,250,.4); color: #60a5fa; background: rgba(96,165,250,.1); }
+
+    .grid-2 { display: grid; gap: 1rem; grid-template-columns: 1fr 1fr; }
+    @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.15rem;
+      margin-bottom: 1rem;
+    }
+    .card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: .85rem; }
+    .card-title { font-size: .82rem; font-weight: 600; color: var(--text); }
+    .card-desc { font-size: .75rem; color: var(--muted); margin-bottom: .75rem; }
+
+    textarea.orch-input {
+      width: 100%; min-height: 88px; padding: .75rem 1rem;
+      border-radius: var(--radius); border: 1px solid var(--border-strong);
+      background: var(--bg); color: var(--text); font-family: inherit; font-size: .85rem;
+      resize: vertical; transition: border-color .2s;
+    }
+    textarea.orch-input:focus { outline: none; border-color: var(--accent); }
+
+    .btn-row { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; margin-top: .75rem; }
+    .btn {
+      padding: .5rem 1rem; border-radius: 8px; font-size: .78rem; font-weight: 600;
+      border: 1px solid var(--border-strong); background: var(--surface-hover);
+      color: var(--text); cursor: pointer; transition: background .15s, transform .1s;
+    }
+    .btn:hover { background: #252532; }
+    .btn:active { transform: scale(.98); }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-primary {
+      background: var(--accent); border-color: transparent; color: #fff;
+    }
+    .btn-primary:hover { background: #5558e8; }
+    .msg { font-size: .75rem; color: var(--muted); }
+
+    .stats { display: grid; gap: .6rem; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); margin-bottom: 1rem; }
+    .stat {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: .65rem .8rem;
+    }
+    .stat label { font-size: .62rem; text-transform: uppercase; letter-spacing: .05em; color: var(--dim); }
+    .stat span { font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+    .mermaid-wrap {
+      background: var(--bg); border-radius: var(--radius); padding: 1rem;
+      border: 1px solid var(--border); min-height: 140px; overflow: auto;
+    }
+    .router-tag { font-size: .72rem; color: var(--cyan); font-family: 'JetBrains Mono', monospace; }
+
+    .pipeline { display: flex; flex-wrap: wrap; gap: .35rem; margin-bottom: 1rem; align-items: center; }
+    .pipe-node {
+      padding: .35rem .65rem; border-radius: 6px; font-size: .7rem; font-weight: 500;
+      border: 1px solid var(--border); color: var(--muted); background: var(--bg);
+    }
+    .pipe-node.active { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+    .pipe-arrow { color: var(--dim); font-size: .65rem; }
+
+    .progress-wrap { display: flex; align-items: center; gap: .75rem; margin-bottom: 1rem; }
+    .progress-bar { flex: 1; height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--cyan)); transition: width .35s; border-radius: 99px; }
+
+    .team-grid { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+    .team-col {
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: .75rem; background: var(--bg);
+    }
+    .team-head { display: flex; align-items: center; gap: .4rem; font-size: .75rem; font-weight: 600; margin-bottom: .5rem; }
+    .team-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .team-meta { font-size: .65rem; color: var(--dim); margin-left: auto; }
+    .agent {
+      padding: .5rem .6rem; border-radius: 8px; border: 1px solid var(--border);
+      margin-bottom: .4rem; background: var(--surface); font-size: .72rem;
+    }
+    .agent.running { border-color: rgba(96,165,250,.5); box-shadow: 0 0 0 1px rgba(96,165,250,.2); }
+    .agent.done { border-color: rgba(52,211,153,.25); }
+    .agent-name { font-weight: 600; }
+    .agent-key { font-family: 'JetBrains Mono', monospace; font-size: .62rem; color: var(--dim); }
+    .st { font-size: .6rem; font-weight: 700; text-transform: uppercase; margin-top: .25rem; display: inline-block; padding: .1rem .35rem; border-radius: 4px; }
+    .st-running { background: rgba(96,165,250,.15); color: #60a5fa; }
+    .st-written, .st-complete, .st-skipped { background: rgba(52,211,153,.12); color: var(--green); }
+    .st-pending { color: var(--dim); }
+    .st-error { background: rgba(248,113,113,.12); color: var(--red); }
+
+    .kb-table { width: 100%; border-collapse: collapse; font-size: .72rem; }
+    .kb-table th { text-align: left; color: var(--dim); font-size: .62rem; text-transform: uppercase; padding: .4rem .5rem; border-bottom: 1px solid var(--border); }
+    .kb-table td { padding: .45rem .5rem; border-bottom: 1px solid var(--border); }
+
+    .usage-table { width: 100%; font-size: .72rem; margin-top: .5rem; }
+    .usage-table td { padding: .35rem .5rem; border-bottom: 1px solid var(--border); color: var(--muted); }
+    .usage-table td:last-child { text-align: right; font-family: 'JetBrains Mono', monospace; color: var(--amber); }
+
+    .run-banner {
+      background: linear-gradient(135deg, rgba(99,102,241,.1), rgba(34,211,238,.06));
+      border: 1px solid rgba(99,102,241,.3);
+      border-radius: var(--radius-lg);
+      padding: .85rem 1rem;
+      margin-bottom: 1rem;
+      font-size: .78rem;
+    }
+    .run-banner.complete { border-color: rgba(52,211,153,.35); background: rgba(52,211,153,.06); }
+    .run-banner.error { border-color: rgba(248,113,113,.35); background: rgba(248,113,113,.06); }
+    .run-banner strong { color: var(--text); }
+
+    .activity-feed {
+      max-height: 220px; overflow-y: auto; font-size: .72rem;
+      border: 1px solid var(--border); border-radius: var(--radius);
+      background: var(--bg); padding: .5rem;
+    }
+    .activity-line {
+      display: flex; gap: .5rem; padding: .35rem .4rem; border-bottom: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .activity-line:last-child { border-bottom: none; }
+    .activity-ts { color: var(--dim); flex-shrink: 0; }
+    .activity-msg { color: var(--muted); }
+    .activity-msg.warn { color: var(--amber); }
+    .activity-msg.error { color: var(--red); }
+
+    .pipe-node.done { border-color: rgba(52,211,153,.4); color: var(--green); background: rgba(52,211,153,.08); }
+    .pipe-node.running { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); animation: pulse 1.2s ease infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .7; } }
+
+    footer { text-align: center; color: var(--dim); font-size: .68rem; padding: 1.5rem; border-top: 1px solid var(--border); margin-top: 1rem; }
+  </style>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose', themeVariables: { primaryColor: '#6366f1', lineColor: '#52525b', tertiaryColor: '#16161f' } });
+    window.__mermaid = mermaid;
+  </script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="logo"><span class="logo-dot"></span> SFDC Agent Fleet</div>
+
+      <div>
+        <div class="nav-label">Project</div>
+        <div class="ctx-card" id="sidebar-ctx">
+          <strong id="ctx-project">—</strong>
+          <div class="ctx-row">Org <code id="ctx-org">—</code></div>
+          <div class="ctx-row" id="ctx-path">—</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="nav-label">API usage (est.)</div>
+        <div class="cost-card">
+          <div class="cost-label">Total spend</div>
+          <div class="cost-value" id="cost-total">$0.00</div>
+          <div class="cost-sub" id="cost-month">This month: $0.00</div>
+          <div class="cost-sub" id="cost-tokens">0 tokens · 0 LLM calls</div>
+          <div class="cost-bar"><div class="cost-bar-fill" id="cost-bar"></div></div>
+        </div>
+      </div>
+
+      <div class="info-note">
+        <strong style="color:var(--text);font-size:.75rem;">Views</strong><br>
+        <a href="/skills-fleet.html" style="color:var(--cyan);font-size:.75rem;">Skills & Agents Fleet</a> — live feeds & usage<br>
+        <span style="font-size:.72rem;color:var(--muted)">Orchestrator runs on button click or <code>sfdc-swarm orchestrate</code></span>
+      </div>
+    </aside>
+
+    <div class="main">
+      <div class="topbar">
+        <div>
+          <h1>Agent orchestrator</h1>
+          <div class="msg" id="updated">—</div>
+        </div>
+        <div class="badges">
+          <span class="badge" id="health-badge">—</span>
+          <span class="badge idle" id="swarm-badge">idle</span>
+        </div>
+      </div>
+
+      <div class="stats" id="stats"></div>
+
+      <div class="run-banner" id="run-banner" style="display:none"></div>
+
+      <div class="card">
+        <div class="card-title">New task</div>
+        <div class="card-desc">Router → Requirements → Research → Design → Dev → Admin → QA → Docs → Training</div>
+        <textarea class="orch-input" id="orch-input" placeholder="e.g. Implement Pantheon bundle view for SFDCLQ-7591"></textarea>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btn-orchestrate" type="button">Run orchestrator</button>
+          <button class="btn" id="btn-run" type="button">KB refresh</button>
+          <label style="font-size:.75rem;color:var(--muted);display:flex;align-items:center;gap:.35rem">
+            <input type="checkbox" id="chk-deep" /> Deep LLM
+          </label>
+          <span class="msg" id="orch-msg"></span>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">LangGraph workflow</span>
+            <span class="router-tag" id="router-badge"></span>
+          </div>
+          <div class="mermaid-wrap" id="graph-mermaid"></div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:.75rem">Usage breakdown</div>
+          <table class="usage-table" id="usage-recent"><tbody></tbody></table>
+          <div class="msg" id="usage-note" style="margin-top:.5rem"></div>
+        </div>
+      </div>
+
+      <div class="pipeline" id="pipeline"></div>
+
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">Live activity</span>
+          <span class="msg" id="fleet-state-path"></span>
+        </div>
+        <div class="activity-feed" id="activity-feed"><div class="msg">No activity yet — run the orchestrator above</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">Live agents</span>
+          <div class="progress-wrap" style="flex:1;max-width:280px;margin:0">
+            <div class="progress-bar"><div class="progress-fill" id="swarm-progress" style="width:0%"></div></div>
+            <span class="msg" id="swarm-progress-label" style="white-space:nowrap">0/0</span>
+          </div>
+        </div>
+        <div class="team-grid" id="team-swarm"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="margin-bottom:.5rem">Knowledge base</div>
+        <div class="msg" id="kb-summary"></div>
+        <table class="kb-table" style="margin-top:.75rem">
+          <thead><tr><th>Cat</th><th>Team</th><th>Topic</th><th>Status</th></tr></thead>
+          <tbody id="kb-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <footer>LangGraph supervisor · per-project Salesforce org · estimates not actual billing</footer>
+
+  <script>
+    const LEGACY_TEAM = { 'ui-ux': { name: 'UI/UX', color: '#a78bfa' }, 'salesforce-dev': { name: 'SF Dev', color: '#60a5fa' }, 'salesforce-admin': { name: 'Admin', color: '#34d399' } };
+    let TEAM = { ...LEGACY_TEAM };
+    let PIPE = [];
+    let pollMs = 2000;
+    const MONTH_BUDGET = 5; // soft visual cap for bar
+
+    function esc(s) { const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
+    function stClass(s) { return 'st-' + (s || 'pending'); }
+    function fmtUsd(n) { return '$' + (Number(n) || 0).toFixed(4); }
+
+    async function loadAgentRegistry() {
+      try {
+        const res = await fetch('/api/agents');
+        const data = await res.json();
+        TEAM = { ...LEGACY_TEAM };
+        (data.teams || []).forEach(t => { TEAM[t.id] = { name: t.name, color: t.color || '#6366f1' }; });
+        if (data.graph_nodes?.length) PIPE = data.graph_nodes.map(n => ({ id: n.id, label: n.label || n.id }));
+      } catch (e) { console.warn(e); }
+    }
+
+    function renderUsage(usage) {
+      if (!usage) return;
+      document.getElementById('cost-total').textContent = fmtUsd(usage.total_usd);
+      document.getElementById('cost-month').textContent = 'This month: ' + fmtUsd(usage.month_usd);
+      document.getElementById('cost-tokens').textContent =
+        `${(usage.total_tokens || 0).toLocaleString()} tokens · ${usage.llm_calls || 0} LLM calls`;
+      const pct = Math.min(100, ((usage.month_usd || 0) / MONTH_BUDGET) * 100);
+      document.getElementById('cost-bar').style.width = pct + '%';
+      document.getElementById('usage-note').textContent = usage.pricing_note || '';
+      const rows = (usage.recent || []).slice(0, 6).map(e =>
+        `<tr><td>${esc(e.source)}</td><td>${fmtUsd(e.usd)}</td></tr>`
+      ).join('');
+      document.getElementById('usage-recent').innerHTML = rows || '<tr><td colspan="2">No LLM calls yet (rules-only = $0)</td></tr>';
+    }
+
+    async function renderGraphDiagram() {
+      try {
+        const res = await fetch('/api/graph/diagram');
+        const data = await res.json();
+        const el = document.getElementById('graph-mermaid');
+        if (data.router_method) document.getElementById('router-badge').textContent = data.router_method;
+        if (data.mermaid && window.__mermaid && el) {
+          const { svg } = await window.__mermaid.render('g' + Date.now(), data.mermaid);
+          el.innerHTML = svg;
+        }
+        if (data.pipeline?.length) {
+          PIPE = data.pipeline.map(id => ({ id, label: TEAM[id.replace('_team', '')]?.name || id.replace('_team', '') }));
+        }
+      } catch (e) { console.warn(e); }
+    }
+
+    function renderPipeline(run) {
+      const steps = run?.pipeline_steps || [];
+      if (steps.length) {
+        document.getElementById('pipeline').innerHTML = steps.map((s, i) => {
+          const cls = s.status === 'running' ? 'running' : (s.status === 'complete' || s.status === 'skipped' ? 'done' : (s.status === 'active' ? 'active' : ''));
+          const arrow = i < steps.length - 1 ? '<span class="pipe-arrow">→</span>' : '';
+          return `<span class="pipe-node ${cls}">${esc(s.label || s.id)}</span>${arrow}`;
+        }).join('');
+        return;
+      }
+      const activeNode = run?.active_graph_node || '';
+      document.getElementById('pipeline').innerHTML = PIPE.map((n, i) => {
+        const active = n.id === activeNode ? 'active' : '';
+        const arrow = i < PIPE.length - 1 ? '<span class="pipe-arrow">→</span>' : '';
+        return `<span class="pipe-node ${active}">${esc(n.label)}</span>${arrow}`;
+      }).join('');
+    }
+
+    function renderActivity(run) {
+      const items = run?.activity || [];
+      const el = document.getElementById('activity-feed');
+      if (!items.length) {
+        el.innerHTML = '<div class="msg">No activity yet</div>';
+        return;
+      }
+      el.innerHTML = items.slice(0, 40).map(a => {
+        const ts = (a.ts || '').slice(11, 19);
+        const lvl = a.level === 'error' ? 'error' : (a.level === 'warn' ? 'warn' : '');
+        return `<div class="activity-line"><span class="activity-ts">${esc(ts)}</span><span class="activity-msg ${lvl}">${esc(a.message)}</span></div>`;
+      }).join('');
+    }
+
+    function renderRunBanner(run, status) {
+      const el = document.getElementById('run-banner');
+      if (!run) { el.style.display = 'none'; return; }
+      const active = status?.worker_running || run.status === 'running';
+      const cls = run.status === 'error' ? 'error' : (run.status === 'complete' ? 'complete' : '');
+      const delivery = run.agents?.find(a => a.summary?.includes('swarm-deliveries'))?.summary || run.delivery_path || '';
+      let html = `<strong>${active ? 'Orchestrator running' : 'Last run: ' + (run.run_id || '')}</strong> · ${esc(run.status || '—')}`;
+      if (run.router_method) html += ` · router: ${esc(run.router_method)}`;
+      if (run.pipeline?.length) html += `<br>Pipeline: ${esc(run.pipeline.map(p => p.replace('_team','')).join(' → '))}`;
+      if (delivery) html += `<br>Delivery: <code>${esc(delivery)}</code>`;
+      if (run.error) html += `<br><span style="color:var(--red)">${esc(run.error)}</span>`;
+      if (!active && run.status === 'complete') {
+        html += '<br><span style="color:var(--muted)">Artifacts written — implementation runs in Cursor using the work orders in .cursor/swarm/.fleet/runs/</span>';
+      }
+      el.className = 'run-banner ' + cls;
+      el.innerHTML = html;
+      el.style.display = 'block';
+    }
+
+    function agentCard(a) {
+      const st = a.status || 'pending';
+      const cls = st === 'running' ? 'running' : (st === 'error' ? 'err' : (st !== 'pending' ? 'done' : ''));
+      return `<div class="agent ${cls}">
+        <div class="agent-name">${esc(a.title || a.id)}</div>
+        <div class="agent-key">${esc(a.id)}</div>
+        <span class="st ${stClass(st)}">${esc(st)}</span>
+      </div>`;
+    }
+
+    function renderSwarm(run) {
+      const agents = run?.agents || [];
+      const byTeam = {};
+      agents.forEach(a => { const t = a.team_id || 'development'; if (!byTeam[t]) byTeam[t] = []; byTeam[t].push(a); });
+      const teamOrder = run?.teams || Object.keys(byTeam);
+      const keys = [...new Set([...teamOrder, ...Object.keys(byTeam)])];
+      document.getElementById('team-swarm').innerHTML = keys.map(tid => {
+        const meta = TEAM[tid] || { name: tid, color: '#6366f1' };
+        const list = byTeam[tid] || [];
+        const runCt = list.filter(a => a.status === 'running').length;
+        return `<div class="team-col">
+          <div class="team-head"><span class="team-dot" style="background:${meta.color}"></span>${esc(meta.name)}
+          <span class="team-meta">${runCt} active · ${list.length} agents</span></div>
+          ${list.map(agentCard).join('') || '<div class="msg">—</div>'}
+        </div>`;
+      }).join('') || '<div class="msg">No active run</div>';
+      const p = run?.progress || {};
+      document.getElementById('swarm-progress').style.width = (p.percent || 0) + '%';
+      document.getElementById('swarm-progress-label').textContent = `${p.done || 0}/${p.total || agents.length}`;
+      if (run?.usage?.usd) document.getElementById('orch-msg').textContent = `Run cost: ${fmtUsd(run.usage.usd)}`;
+    }
+
+    async function startOrchestrator() {
+      const input = document.getElementById('orch-input').value.trim();
+      if (!input) { document.getElementById('orch-msg').textContent = 'Enter a task above'; return; }
+      const btn = document.getElementById('btn-orchestrate');
+      btn.disabled = true;
+      document.getElementById('orch-msg').textContent = 'Starting orchestrator…';
+      pollMs = 150;
+      try {
+        const res = await fetch('/api/orchestrate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ input }) });
+        const data = await res.json();
+        if (!data.ok) {
+          document.getElementById('orch-msg').textContent = data.error || 'Failed';
+          btn.disabled = false;
+          return;
+        }
+        document.getElementById('orch-msg').textContent = 'Running — watch activity feed below';
+        for (let i = 0; i < 180; i++) {
+          await refresh();
+          const st = await fetch('/api/swarm/status').then(r => r.json());
+          if (!st.worker_running && !st.fleet_run_active) break;
+          await new Promise(r => setTimeout(r, 150));
+        }
+        await refresh();
+        document.getElementById('orch-msg').textContent = 'Run finished — see banner and activity log';
+      } catch (e) { document.getElementById('orch-msg').textContent = e.message; }
+      btn.disabled = false;
+      pollMs = 2000;
+    }
+
+    async function startSwarm(force) {
+      const deep = document.getElementById('chk-deep').checked;
+      document.getElementById('btn-run').disabled = true;
+      try {
+        const res = await fetch('/api/swarm/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ force, deep }) });
+        const data = await res.json();
+        document.getElementById('orch-msg').textContent = data.message || data.error || 'Done';
+        if (data.ok) pollMs = 400;
+      } catch (e) { document.getElementById('orch-msg').textContent = e.message; }
+      document.getElementById('btn-run').disabled = false;
+    }
+
+    async function refresh() {
+      try {
+        const [fleetRes, statusRes, ctxRes] = await Promise.all([
+          fetch('/api/fleet'), fetch('/api/swarm/status'), fetch('/api/context'),
+        ]);
+        const data = await fleetRes.json();
+        const status = await statusRes.json();
+        const ctx = await ctxRes.json();
+
+        if (ctx.projectName) {
+          document.getElementById('ctx-project').textContent = ctx.projectName;
+          document.getElementById('ctx-org').textContent = ctx.targetOrgAlias || '—';
+          document.getElementById('ctx-path').textContent = ctx.sourcePath || '';
+        }
+        const fleetCtx = data.context || {};
+        if (fleetCtx.fleetStatePath) {
+          document.getElementById('fleet-state-path').textContent = fleetCtx.fleetStatePath;
+        }
+        renderUsage(data.usage);
+
+        const swarmActive = status.worker_running || status.fleet_run_active || (data.active_run?.status === 'running');
+        document.getElementById('swarm-badge').textContent = swarmActive ? 'running' : 'idle';
+        document.getElementById('swarm-badge').className = 'badge ' + (swarmActive ? 'run' : 'idle');
+        pollMs = swarmActive ? 150 : 2000;
+        document.getElementById('updated').textContent = 'Updated ' + (data.timestamp || '').slice(11, 19);
+        if (status.last_error) document.getElementById('orch-msg').textContent = 'Error: ' + status.last_error;
+
+        const h = data.health || {};
+        document.getElementById('health-badge').textContent = h.overall || 'idle';
+        document.getElementById('stats').innerHTML = [
+          { l: 'Agents', v: h.total_agents || 0 },
+          { l: 'Running', v: (h.counts?.running || 0) },
+          { l: 'KB', v: (data.kb?.percent || 0) + '%' },
+          { l: 'Spend', v: fmtUsd(data.usage?.total_usd) },
+        ].map(s => `<div class="stat"><label>${s.l}</label><span>${s.v}</span></div>`).join('');
+
+        await renderGraphDiagram();
+        const run = (data.runs || []).find(r => r.status === 'running') || data.active_run || (data.runs || [])[0];
+        renderPipeline(run);
+        renderActivity(run);
+        renderRunBanner(run, status);
+        renderSwarm(run);
+
+        const kb = data.kb || {};
+        const cats = kb.categories || {};
+        document.getElementById('kb-summary').textContent =
+          `codebase ${cats.codebase?.written}/${cats.codebase?.total} · project ${cats.project?.written || cats.nextgen2?.written}/${cats.project?.total || cats.nextgen2?.total}`;
+        document.getElementById('kb-body').innerHTML = (kb.topics || []).slice(0, 20).map(t =>
+          `<tr><td>${esc(t.category)}</td><td>${esc(TEAM[t.team]?.name || t.team || '—')}</td><td>${esc(t.title)}</td><td><span class="st ${stClass(t.status)}">${esc(t.status)}</span></td></tr>`
+        ).join('');
+      } catch (e) { console.error(e); }
+      setTimeout(refresh, pollMs);
+    }
+
+    document.getElementById('btn-orchestrate').onclick = () => startOrchestrator();
+    document.getElementById('btn-run').onclick = () => startSwarm(false);
+    loadAgentRegistry().then(() => { renderGraphDiagram(); refresh(); });
+  </script>
+</body>
+</html>

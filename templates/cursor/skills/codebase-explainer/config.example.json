@@ -1,0 +1,12 @@
+{
+  "jiraProjectKey": "SFDCLQ",
+  "jiraBaseUrl": "https://servicetitan.atlassian.net",
+  "confluenceSpaceKeys": [],
+  "driveSearchHints": [],
+  "localDocPaths": [
+    "docs/",
+    "README.md",
+    "tools/sfdc-knowledge-swarm/knowledge-base/"
+  ],
+  "outputDir": "docs/explainers"
+}

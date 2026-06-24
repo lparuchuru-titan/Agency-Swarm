@@ -1,0 +1,20 @@
+---
+description: Always use the Salesforce default org from this project's .sf/config.json
+globs:
+  - "**/sfdx-project.json"
+  - "**/.sf/config.json"
+  - "**/force-app/**"
+  - "**/Master/**"
+alwaysApply: false
+---
+
+# Salesforce project default org
+
+Copy this file to `.cursor/rules/sfdc-default-org.mdc` in each Salesforce DX project.
+
+When working in this repository:
+
+1. Run: `python3 ~/.cursor/skills/_shared/show-context.py`
+2. Use `targetOrgAlias` from output for all `sf` commands (`--target-org`)
+3. Default org = `.sf/config.json` → `target-org` (project-local, set when you configure the sandbox for this folder)
+4. Never hardcode org aliases — re-resolve when switching projects

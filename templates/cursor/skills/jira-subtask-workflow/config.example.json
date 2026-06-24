@@ -1,0 +1,7 @@
+{
+  "jiraBaseUrl": "https://servicetitan.atlassian.net",
+  "projectKey": "SFDCLQ",
+  "subtaskIssueType": "Sub-task",
+  "parentStoryKey": null,
+  "targetOrgAlias": null
+}

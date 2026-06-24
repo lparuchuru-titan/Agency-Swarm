@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Swarm runtime (per-machine / per-project — not versioned here)
+framework/.fleet/
+framework/knowledge-base/codebase/*.md
+framework/knowledge-base/connected/*.md
+framework/knowledge-base/project/*.md
+framework/knowledge-base/skills/sync-state.json
+
+# OS / IDE
+.DS_Store
+.idea/
+*.log
+
+# Local install test copies
+.tmp/

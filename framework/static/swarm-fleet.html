@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Multi-Agent Dev Swarm</title>
+  <style>
+    :root {
+      --bg:#080c10;--surface:#121820;--surface2:#1a2330;--border:#2a3647;
+      --text:#e8edf4;--muted:#8fa3b8;--green:#34d399;--yellow:#fbbf24;
+      --red:#f87171;--blue:#60a5fa;--purple:#a78bfa;--cyan:#22d3ee;--orange:#fb923c;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:"SF Pro Text",ui-sans-serif,system-ui,sans-serif;
+      background:radial-gradient(1200px 600px at 10% -10%,#1a2740 0%,var(--bg) 55%);
+      color:var(--text);min-height:100vh}
+    header{padding:1rem 1.5rem;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+      background:rgba(8,12,16,.92);backdrop-filter:blur(10px);position:sticky;top:0;z-index:30}
+    h1{margin:0;font-size:1.15rem;font-weight:700}
+    .sub{color:var(--muted);font-size:.78rem}
+    .badge{padding:.25rem .75rem;border-radius:999px;font-size:.68rem;font-weight:700;text-transform:uppercase}
+    .healthy,.complete{background:rgba(52,211,153,.12);color:var(--green)}
+    .active,.running{background:rgba(96,165,250,.12);color:var(--blue)}
+    .no-key{background:rgba(34,211,238,.1);color:var(--cyan)}
+    main{padding:1.25rem 1.5rem 2.5rem;max-width:1500px;margin:0 auto}
+    .controls{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem}
+    .btn{padding:.5rem 1rem;border-radius:8px;border:1px solid var(--border);background:var(--surface2);
+      color:var(--text);font-size:.8rem;font-weight:600;cursor:pointer}
+    .btn-primary{background:linear-gradient(135deg,#3b82f6,#06b6d4);border:none;color:#fff}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+    .chk{font-size:.78rem;color:var(--muted);display:flex;align-items:center;gap:.35rem}
+    .stats{display:grid;gap:.6rem;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));margin-bottom:1rem}
+    .stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.7rem .85rem}
+    .stat label{display:block;font-size:.65rem;color:var(--muted);text-transform:uppercase}
+    .stat span{font-size:1.25rem;font-weight:700}
+    .pipeline{display:flex;align-items:center;gap:.35rem;margin-bottom:1.25rem;flex-wrap:wrap}
+    .pipe-node{padding:.45rem .75rem;border-radius:8px;border:1px solid var(--border);
+      background:var(--surface);font-size:.72rem;font-weight:600;color:var(--muted);transition:.3s}
+    .pipe-node.active{border-color:var(--blue);color:var(--blue);box-shadow:0 0 16px rgba(96,165,250,.2);
+      animation:glow 1.5s ease-in-out infinite}
+    .pipe-arrow{color:var(--border);font-size:.7rem}
+    @keyframes glow{0%,100%{box-shadow:0 0 8px rgba(96,165,250,.15)}50%{box-shadow:0 0 20px rgba(96,165,250,.35)}}
+    .swarm-arena{background:var(--surface);border:1px solid var(--border);border-radius:16px;
+      padding:1rem;margin-bottom:1.25rem}
+    .arena-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem}
+    .arena-title{font-weight:700;font-size:.85rem}
+    .progress-bar{height:10px;background:var(--surface2);border-radius:999px;overflow:hidden;border:1px solid var(--border);flex:1;max-width:320px}
+    .progress-fill{height:100%;background:linear-gradient(90deg,var(--purple),var(--blue),var(--cyan));
+      transition:width .4s ease;border-radius:999px}
+    .team-swarm{display:grid;gap:1rem;grid-template-columns:repeat(3,1fr)}
+    @media(max-width:1000px){.team-swarm{grid-template-columns:1fr}}
+    .team-col{border:1px solid var(--border);border-radius:12px;padding:.85rem;background:var(--surface2)}
+    .team-head{display:flex;align-items:center;gap:.5rem;margin-bottom:.65rem;font-weight:600;font-size:.82rem}
+    .team-dot{width:10px;height:10px;border-radius:50%}
+    .team-count{font-size:.68rem;color:var(--muted);margin-left:auto}
+    .agent-swarm{display:grid;gap:.45rem}
+    .agent{padding:.55rem .65rem;border-radius:9px;border:1px solid var(--border);background:var(--surface);
+      position:relative;transition:transform .2s,border-color .2s,box-shadow .2s}
+    .agent.running{border-color:rgba(96,165,250,.55);transform:scale(1.02);
+      box-shadow:0 4px 20px rgba(96,165,250,.12);z-index:2}
+    .agent.running::before{content:"";position:absolute;top:6px;right:6px;width:6px;height:6px;
+      border-radius:50%;background:var(--blue);animation:pulse 1.2s infinite}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(1.4)}}
+    .agent.done{border-color:rgba(52,211,153,.3)}
+    .agent.err{border-color:rgba(248,113,113,.4)}
+    .agent-name{font-size:.78rem;font-weight:600;line-height:1.3}
+    .agent-key{font-size:.65rem;color:var(--muted);font-family:ui-monospace,monospace}
+    .agent-status{font-size:.62rem;font-weight:700;text-transform:uppercase;margin-top:.3rem;display:inline-block;
+      padding:.1rem .35rem;border-radius:3px}
+    .st-running{background:rgba(96,165,250,.15);color:var(--blue)}
+    .st-written,.st-skipped,.st-complete{background:rgba(52,211,153,.12);color:var(--green)}
+    .st-pending{background:var(--surface2);color:var(--muted)}
+    .st-error{background:rgba(248,113,113,.12);color:var(--red)}
+    .agent-summary{font-size:.68rem;color:var(--muted);margin-top:.25rem;line-height:1.3}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1rem}
+    .kb-table{width:100%;border-collapse:collapse;font-size:.75rem}
+    .kb-table th,.kb-table td{padding:.4rem .5rem;border-bottom:1px solid var(--border);text-align:left}
+    .kb-table th{color:var(--muted);font-size:.65rem;text-transform:uppercase}
+    footer{text-align:center;color:var(--muted);font-size:.7rem;padding:1rem;border-top:1px solid var(--border)}
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Multi-Agent Dev Swarm</h1>
+      <div class="sub">LangGraph · parallel agents · live fleet</div>
+    </div>
+    <button class="btn btn-primary" id="btn-run-header" type="button">▶ Run Swarm</button>
+    <button class="btn" id="btn-force-header" type="button">Force</button>
+    <span id="health-badge" class="badge">…</span>
+    <span id="swarm-badge" class="badge no-key">idle</span>
+    <span id="updated" class="sub"></span>
+  </header>
+
+  <main>
+    <div class="controls">
+      <button class="btn btn-primary" id="btn-run" type="button">▶ Run Swarm</button>
+      <button class="btn" id="btn-force" type="button">Force refresh</button>
+      <label class="chk"><input type="checkbox" id="chk-deep" /> Deep (API key)</label>
+      <span class="sub" id="run-msg"></span>
+    </div>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="pipeline" id="pipeline"></div>
+
+    <section class="swarm-arena">
+      <div class="arena-head">
+        <span class="arena-title">Live multi-agent swarm</span>
+        <div class="progress-bar"><div class="progress-fill" id="swarm-progress" style="width:0%"></div></div>
+        <span class="sub" id="swarm-progress-label">0 / 0 agents</span>
+      </div>
+      <div class="team-swarm" id="team-swarm"></div>
+    </section>
+
+    <section class="card" style="margin-top:1rem">
+      <div class="sub" style="margin-bottom:.5rem;font-weight:600">Knowledge base</div>
+      <div class="sub" id="kb-summary"></div>
+      <table class="kb-table" style="margin-top:.75rem"><thead><tr>
+        <th>Cat</th><th>Team</th><th>Topic</th><th>Status</th></tr></thead><tbody id="kb-body"></tbody></table>
+    </section>
+  </main>
+  <footer>Auto-refresh while swarm runs · LangGraph orchestration</footer>
+
+  <script>
+    const TEAM = {
+      'ui-ux': { name: 'UI/UX Team', color: '#a78bfa' },
+      'salesforce-dev': { name: 'Salesforce Team', color: '#60a5fa' },
+      'salesforce-admin': { name: 'Admin Team', color: '#34d399' },
+    };
+    const PIPE = [
+      { id: 'plan', label: 'Plan' },
+      { id: 'ui_ux_team', label: 'UI/UX swarm' },
+      { id: 'salesforce_dev_team', label: 'SF Dev swarm' },
+      { id: 'salesforce_admin_team', label: 'Admin swarm' },
+      { id: 'index', label: 'Index' },
+    ];
+    let pollMs = 2000;
+    let graphData = null;
+
+    function esc(s) {
+      const d = document.createElement('div');
+      d.textContent = s ?? '';
+      return d.innerHTML;
+    }
+    function stClass(s) { return 'st-' + (s || 'pending'); }
+
+    function renderPipeline(activeNode) {
+      document.getElementById('pipeline').innerHTML = PIPE.map((n, i) => {
+        const active = n.id === activeNode ? 'active' : '';
+        const arrow = i < PIPE.length - 1 ? '<span class="pipe-arrow">→</span>' : '';
+        return `<span class="pipe-node ${active}">${esc(n.label)}</span>${arrow}`;
+      }).join('');
+    }
+
+    function agentCard(a) {
+      const st = a.status || 'pending';
+      const cls = st === 'running' ? 'running' : (st === 'error' ? 'err' : (st !== 'pending' ? 'done' : ''));
+      return `<div class="agent ${cls}">
+        <div class="agent-name">${esc(a.title || a.id)}</div>
+        <div class="agent-key">${esc(a.id)}</div>
+        <span class="agent-status ${stClass(st)}">${esc(st)}</span>
+        ${a.summary ? `<div class="agent-summary">${esc(String(a.summary).slice(0,80))}</div>` : ''}
+      </div>`;
+    }
+
+    function renderSwarm(run) {
+      const agents = run?.agents || [];
+      const byTeam = { 'ui-ux': [], 'salesforce-dev': [], 'salesforce-admin': [] };
+      agents.forEach(a => {
+        const t = a.team_id || 'salesforce-dev';
+        if (byTeam[t]) byTeam[t].push(a);
+      });
+
+      document.getElementById('team-swarm').innerHTML = Object.keys(byTeam).map(tid => {
+        const meta = TEAM[tid] || { name: tid, color: '#60a5fa' };
+        const list = byTeam[tid];
+        const running = list.filter(a => a.status === 'running').length;
+        const done = list.filter(a => !['running','pending'].includes(a.status)).length;
+        return `<div class="team-col">
+          <div class="team-head">
+            <span class="team-dot" style="background:${meta.color}"></span>
+            ${esc(meta.name)}
+            <span class="team-count">${running} active · ${done}/${list.length}</span>
+          </div>
+          <div class="agent-swarm">${list.map(agentCard).join('') || '<div class="sub">No agents</div>'}</div>
+        </div>`;
+      }).join('');
+
+      const p = run?.progress || {};
+      const pct = p.percent || 0;
+      document.getElementById('swarm-progress').style.width = pct + '%';
+      document.getElementById('swarm-progress-label').textContent =
+        `${p.done || 0}/${p.total || agents.length} agents · ${p.running || 0} running now`;
+    }
+
+    async function startSwarm(force) {
+      const deep = document.getElementById('chk-deep').checked;
+      document.getElementById('btn-run').disabled = true;
+      document.getElementById('run-msg').textContent = 'Starting LangGraph swarm…';
+      try {
+        const res = await fetch('/api/swarm/run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ force, deep }),
+        });
+        const data = await res.json();
+        if (!res.ok || data.ok === false) {
+          document.getElementById('run-msg').textContent =
+            data.error || 'Server too old — restart: python3 serve_fleet.py';
+          return;
+        }
+        document.getElementById('run-msg').textContent = data.message || 'Started';
+        pollMs = 400;
+      } catch (e) {
+        document.getElementById('run-msg').textContent = e.message;
+      }
+      document.getElementById('btn-run').disabled = false;
+    }
+
+    async function refresh() {
+      try {
+        const [fleetRes, statusRes] = await Promise.all([
+          fetch('/api/fleet'),
+          fetch('/api/swarm/status'),
+        ]);
+        const data = await fleetRes.json();
+        const status = await statusRes.json();
+        const h = data.health || {};
+        const kb = data.kb || {};
+
+        document.getElementById('health-badge').textContent = h.overall || 'idle';
+        document.getElementById('health-badge').className = 'badge ' + (h.overall || '');
+
+        const swarmActive = status.worker_running || status.fleet_run_active ||
+          (data.active_run && data.active_run.status === 'running');
+        const swarmBadge = document.getElementById('swarm-badge');
+        swarmBadge.textContent = swarmActive ? 'swarm active' : 'idle';
+        swarmBadge.className = 'badge ' + (swarmActive ? 'running' : 'no-key');
+        pollMs = swarmActive ? 400 : 2000;
+
+        document.getElementById('updated').textContent = 'Updated ' + (data.timestamp || '').slice(11, 19);
+
+        const counts = h.counts || {};
+        document.getElementById('stats').innerHTML = [
+          { l: 'Agents', v: h.total_agents || 0 },
+          { l: 'Running', v: counts.running || 0 },
+          { l: 'Done', v: (counts.written || 0) + (counts.skipped || 0) + (counts.complete || 0) },
+          { l: 'Errors', v: counts.error || 0 },
+          { l: 'KB', v: (kb.percent || 0) + '%' },
+        ].map(s => `<div class="stat"><label>${s.l}</label><span>${s.v}</span></div>`).join('');
+
+        const run = (data.runs || []).find(r => r.status === 'running') || data.active_run || (data.runs || [])[0];
+        renderPipeline(run?.active_graph_node || (swarmActive ? 'plan' : ''));
+        renderSwarm(run);
+
+        const cats = kb.categories || {};
+        document.getElementById('kb-summary').textContent =
+          `codebase ${cats.codebase?.written}/${cats.codebase?.total} · nextgen2 ${cats.nextgen2?.written}/${cats.nextgen2?.total} · sfdc ${cats.sfdc?.written}/${cats.sfdc?.total}`;
+        document.getElementById('kb-body').innerHTML = (kb.topics || []).slice(0, 30).map(t =>
+          `<tr><td>${esc(t.category)}</td><td>${esc(TEAM[t.team]?.name || t.team || '—')}</td>
+          <td>${esc(t.title)}</td><td><span class="agent-status ${stClass(t.status)}">${esc(t.status)}</span></td></tr>`
+        ).join('');
+      } catch (e) {
+        console.error(e);
+      }
+      setTimeout(refresh, pollMs);
+    }
+
+    document.getElementById('btn-run').onclick = () => startSwarm(false);
+    document.getElementById('btn-force').onclick = () => startSwarm(true);
+    document.getElementById('btn-run-header').onclick = () => startSwarm(false);
+    document.getElementById('btn-force-header').onclick = () => startSwarm(true);
+    refresh();
+  </script>
+</body>
+</html>

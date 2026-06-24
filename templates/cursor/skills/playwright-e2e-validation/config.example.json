@@ -1,0 +1,11 @@
+{
+  "e2eDir": "e2e",
+  "sourcePath": "force-app/main/default",
+  "defaultTabPrefix": "/lightning/n/",
+  "runApexTests": true,
+  "runLwcJest": true,
+  "runPlaywright": true,
+  "e2eRecordIds": {
+    "SBQQ__Quote__c": "set E2E_RECORD_ID env var"
+  }
+}
