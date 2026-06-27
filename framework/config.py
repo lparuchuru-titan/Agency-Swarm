@@ -194,14 +194,13 @@ TOPICS: List[Dict[str, Any]] = [
         "title": "Platform Events, Change Data Capture & Event-Driven Architecture",
         "focus": "Pub/Sub API, Platform Events, CDC, event replay, EDA patterns, decoupled integrations.",
         "docs": [
-            "https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_events_intro.htm",
-            "https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_events_publish_apex.htm",
-            "https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_events_subscribe_apex.htm",
-            "https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_intro.htm",
-            "https://architect.salesforce.com/fundamentals/event-driven-architecture",
-            "https://developer.salesforce.com/docs/platform/pub-sub-api/overview",
-            # GitHub: event-driven recipe
+            # GitHub raw: event-driven recipes and patterns (always fetchable)
             "https://raw.githubusercontent.com/trailheadapps/event-driven-recipes/main/README.md",
+            "https://raw.githubusercontent.com/trailheadapps/apex-recipes/main/force-app/main/default/classes/Platform%20Event%20Recipes/PlatformEventPublishCallback.cls",
+            # Salesforce REST API for platform events (fetchable static docs)
+            "https://raw.githubusercontent.com/salesforce/salesforcedx-vscode/develop/packages/salesforcedx-vscode-apex/README.md",
+            # EDA pattern guide (architect hub — plain HTML)
+            "https://architect.salesforce.com/fundamentals/event-driven-architecture",
         ],
     },
     {
@@ -209,10 +208,12 @@ TOPICS: List[Dict[str, Any]] = [
         "title": "Salesforce Release Notes & New Features",
         "focus": "Latest platform changes, new APIs, deprecated features, migration guidance across Spring/Summer/Winter releases.",
         "docs": [
-            "https://help.salesforce.com/s/articleView?id=release-notes.salesforce_release_notes.htm&type=5",
-            "https://developer.salesforce.com/docs/atlas.en-us.244.0.api.meta/api/implementation_notes.htm",
-            "https://developer.salesforce.com/changelog",
+            # GitHub CHANGELOGs (raw, always fetchable)
             "https://raw.githubusercontent.com/salesforce/salesforcedx-vscode/develop/CHANGELOG.md",
+            "https://raw.githubusercontent.com/forcedotcom/cli/main/CHANGELOG.md",
+            "https://raw.githubusercontent.com/salesforcecli/plugin-deploy-retrieve/main/CHANGELOG.md",
+            # Salesforce DX release notes (GitHub raw)
+            "https://raw.githubusercontent.com/forcedotcom/salesforcedx-apex/main/CHANGELOG.md",
         ],
     },
     # ── New topics: Org Analyst ────────────────────────────────────────────────

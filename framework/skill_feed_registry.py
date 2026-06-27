@@ -20,22 +20,20 @@ SKILL_FEEDS: Dict[str, Dict[str, List[str]]] = {
             "platform-events-cdc",        # event-driven patterns
             "salesforce-releases",        # stay current on new platform features
         ],
-        "codebase": ["apex-services", "triggers-automation", "pantheon-cpq-backend", "security-fls"],
+        "codebase": [],
         "connected": [],
-        "project": ["pantheon-2026-cpq", "nextgen-quoting-runtime"],
+        "project": [],                    # org info fetched live at runtime via sf CLI
     },
     "codebase-explainer": {
-        "open_topics": ["flows-automation"],
-        "codebase": [
-            "lwc-catalog",
-            "pantheon-ui",
-            "apex-services",
-            "nextgen-quoting-runtime",
-            "pantheon-cpq-backend",
-            "aura-flexipages",
+        "open_topics": [
+            "flows-automation",
+            "apex-design-patterns",
+            "metadata-model",
+            "data-modelling",
         ],
+        "codebase": [],
         "connected": ["confluence-index.md", "gdrive-gsheets-index.md"],
-        "project": ["00-architecture-overview", "pantheon-2026-cpq"],
+        "project": [],                    # reads live org/repo at runtime
     },
     "jira-subtask-workflow": {
         "open_topics": [],
@@ -48,9 +46,9 @@ SKILL_FEEDS: Dict[str, Dict[str, List[str]]] = {
             "lwc-fundamentals",           # LWC structure for DOM targeting
             "testing-deployment",         # sf CLI test runner, Apex tests
         ],
-        "codebase": ["lwc-catalog", "pantheon-ui", "aura-flexipages"],
+        "codebase": [],
         "connected": [],
-        "project": ["pantheon-2026-cpq"],
+        "project": [],
     },
     "sfdc-cta-mentor": {
         "open_topics": [
@@ -65,9 +63,9 @@ SKILL_FEEDS: Dict[str, Dict[str, List[str]]] = {
             "data-modelling",             # schema design and ERD
             "salesforce-releases",        # current platform landscape
         ],
-        "codebase": ["nextgen-quoting-runtime", "pantheon-cpq-backend", "metadata-model"],
+        "codebase": [],
         "connected": [],
-        "project": ["00-architecture-overview", "pantheon-2026-cpq", "data-model-and-automation"],
+        "project": [],                    # architects query the live org / repo at runtime
     },
     "sfdc-metadata-sync": {
         "open_topics": [
@@ -77,55 +75,45 @@ SKILL_FEEDS: Dict[str, Dict[str, List[str]]] = {
             "metadata-model",             # Metadata API types and file format
             "salesforce-releases",        # new API versions and metadata types
         ],
-        "codebase": ["metadata-model", "security-fls", "flows-declarative", "promotion-manifest"],
+        "codebase": [],
         "connected": [],
-        "project": ["data-model-and-automation"],
+        "project": [],
     },
     "sfdc-promotion-workflow": {
         "open_topics": [
             "testing-deployment",         # sf CLI, GitHub Actions, CI/CD
             "salesforce-releases",        # platform changes that affect promotion
         ],
-        "codebase": ["promotion-manifest"],
+        "codebase": [],
         "connected": [],
         "project": [],
     },
     # ── New generic lifecycle agents ─────────────────────────────────────────
     "org-analyst": {
         "open_topics": [
-            # Dedicated org-health topics
             "org-health-assessment",
             "security-vulnerability-scanning",
             "permission-model",
-            # Supporting topics
             "security-sharing",
             "testing-deployment",
             "governor-limits",
             "flows-automation",
         ],
-        "codebase": ["security-fls", "metadata-model", "apex-services"],
+        "codebase": [],
         "connected": [],
-        "project": ["data-model-and-automation"],
+        "project": [],                    # queries the live org at runtime
     },
     "reverse-engineer": {
         "open_topics": [
-            # Dedicated reverse-engineering topics
             "metadata-model",
             "data-modelling",
-            # Supporting topics
             "flows-automation",
             "apex-design-patterns",
             "integration-patterns",
         ],
-        "codebase": [
-            "metadata-model",
-            "apex-services",
-            "lwc-catalog",
-            "flows-declarative",
-            "triggers-automation",
-        ],
+        "codebase": [],
         "connected": ["confluence-index.md", "gdrive-gsheets-index.md"],
-        "project": ["00-architecture-overview", "data-model-and-automation"],
+        "project": [],                    # retrieves metadata from live org at runtime
     },
     "pr-reviewer": {
         "open_topics": [

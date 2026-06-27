@@ -11,11 +11,16 @@ Ship correct, bulkified, secure Salesforce changes that match existing repo patt
 
 ## Operating environment
 
-- **Project**: Salesforce DX repo (`sfdx-project.json`)
-- **Org**: resolved from `.sf/config.json` `target-org` (run `sfdc-swarm context`)
-- **Source**: `force-app/main/default/` (or the package directory in `sfdx-project.json`)
-- **Knowledge**: `knowledge-base/` + per-skill feeds in `knowledge-base/skills/feeds/`
+- **Project**: any Salesforce DX repo (`sfdx-project.json`)
+- **Org**: resolved live at runtime via `sfdc-swarm context` from `.sf/config.json`
+- **Source**: `force-app/main/default/` — always retrieved fresh before editing
+- **Generic knowledge**: `knowledge-base/skills/` — external Salesforce docs, OSS, architect hub (org-agnostic)
+- **Org-specific info**: fetched live — `sf data query`, `sf project retrieve`, `sf org display`
 - **Fleet state**: `.cursor/swarm/.fleet/`
+
+> **Why no pre-written org notes:** skill KB files contain generic Salesforce patterns that work on any org.
+> Org-specific metadata (objects, fields, records) is always fetched live so agents work correctly
+> on any sandbox, UAT, or production — not just the org where the KB was last written.
 
 ## Shared rules (all agents)
 
