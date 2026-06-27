@@ -108,6 +108,100 @@ def _accumulate_usage(run_id: str, agent_id: str, usage: Dict[str, Any], cost_us
     totals_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
 
 
+def _retrieve_metadata(
+    org: str, metadata_specs: List[str], label: str,
+    run_id: str, agent_id: str, max_files: int = 10, max_chars_per_file: int = 2500,
+) -> str:
+    """Retrieve actual metadata source from the org and return file contents as context."""
+    if not shutil.which("sf"):
+        return f"_{label}: sf CLI not found_"
+    append_activity(run_id, agent_id, f"📥 Retrieving {label} from {org}…")
+    meta_args: List[str] = []
+    for spec in metadata_specs:
+        meta_args += ["--metadata", spec]
+    try:
+        r = subprocess.run(
+            [_SF, "project", "retrieve", "start", "--target-org", org, "--json"] + meta_args,
+            capture_output=True, text=True, timeout=60, cwd=str(REPO_ROOT),
+        )
+        data = json.loads(r.stdout or "{}")
+        files_retrieved = data.get("result", {}).get("files", []) or []
+        if not files_retrieved:
+            return f"_{label}: nothing retrieved_"
+    except Exception as exc:  # noqa: BLE001
+        return f"_{label}: retrieve failed — {exc}_"
+
+    sections = [f"## Retrieved: {label} ({len(files_retrieved)} files)"]
+    read_count = 0
+    for fi in files_retrieved[:max_files]:
+        fp = Path(fi.get("filePath", ""))
+        if not fp.is_absolute():
+            fp = REPO_ROOT / fp
+        if not fp.is_file() or fp.suffix in (".xml",) and not fi.get("type","").startswith("Custom"):
+            continue
+        try:
+            content = fp.read_text(encoding="utf-8", errors="replace")[:max_chars_per_file]
+            sections.append(f"### {fp.name}\n```\n{content}\n```")
+            read_count += 1
+        except Exception:  # noqa: BLE001
+            pass
+    if read_count == 0:
+        names = [f.get("filePath","?") for f in files_retrieved[:15]]
+        sections.append("Files retrieved:\n" + "\n".join(f"- {n}" for n in names))
+    append_activity(run_id, agent_id, f"  ✅ Read {read_count} files from org")
+    return "\n\n".join(sections)
+
+
+# Domain config: what to retrieve + discovery SOQL
+_DOMAIN_CONFIG: Dict[str, Dict[str, Any]] = {
+    "cpq": {
+        "retrieve": ["CustomObject:SBQQ__Quote__c", "CustomObject:SBQQ__QuoteLine__c", "CustomObject:SBQQ__PriceRule__c"],
+        "soql": [
+            {"label": "Active Price Rules", "q": "SELECT Name, SBQQ__EvaluationEvent__c, SBQQ__EvaluationOrder__c FROM SBQQ__PriceRule__c WHERE SBQQ__Active__c = true ORDER BY SBQQ__EvaluationOrder__c LIMIT 20"},
+            {"label": "CPQ Products", "q": "SELECT ProductCode, Name, SBQQ__ConfigurationType__c FROM Product2 WHERE IsActive = true AND ProductCode != null ORDER BY ProductCode LIMIT 30"},
+            {"label": "Product Features", "q": "SELECT Name, SBQQ__ConfiguredSKU__r.ProductCode, SBQQ__MinOptionCount__c, SBQQ__MaxOptionCount__c FROM SBQQ__ProductFeature__c ORDER BY Name LIMIT 20"},
+        ],
+    },
+    "billing": {
+        "retrieve": ["CustomObject:blng__Invoice__c", "CustomObject:blng__BillingRule__c"],
+        "soql": [
+            {"label": "Billing Rules", "q": "SELECT Name, blng__Active__c, blng__BillingDayOfMonth__c FROM blng__BillingRule__c WHERE blng__Active__c = true LIMIT 20"},
+            {"label": "Finance Books", "q": "SELECT Name, blng__Status__c FROM blng__FinanceBook__c LIMIT 10"},
+        ],
+    },
+    "apex": {
+        "soql": [
+            {"label": "Largest Apex classes", "q": "SELECT Name, ApiVersion, LengthWithoutComments FROM ApexClass WHERE NamespacePrefix = null ORDER BY LengthWithoutComments DESC LIMIT 15"},
+            {"label": "Apex triggers", "q": "SELECT Name, TableEnumOrId, Status FROM ApexTrigger WHERE NamespacePrefix = null ORDER BY Name LIMIT 20"},
+            {"label": "Test coverage gaps", "q": "SELECT ApexClassOrTrigger.Name, NumLinesCovered, NumLinesUncovered FROM ApexCodeCoverageAggregate ORDER BY NumLinesCovered ASC LIMIT 15"},
+        ],
+        "retrieve_soql_names": True,   # retrieve top classes discovered by SOQL
+    },
+    "lwc": {
+        "soql": [{"label": "LWC Components", "q": "SELECT DeveloperName FROM LightningComponentBundle ORDER BY DeveloperName LIMIT 30"}],
+        "retrieve_soql_names": True,
+    },
+    "flow": {
+        "soql": [{"label": "Active Flows", "q": "SELECT MasterLabel, ProcessType, TriggerType FROM Flow WHERE Status = 'Active' ORDER BY MasterLabel LIMIT 30"}],
+        "retrieve_soql_names": True,
+    },
+    "objects": {
+        "soql": [{"label": "Custom objects", "q": "SELECT Label, QualifiedApiName FROM EntityDefinition WHERE IsCustomizable = true AND QualifiedApiName LIKE '%__c' ORDER BY QualifiedApiName LIMIT 30"}],
+        "retrieve_soql_names": True,
+    },
+    "security": {
+        "retrieve": ["Profile:Admin", "PermissionSet:OSCPQ_Salesforce_CPQ_User", "PermissionSet:OSCPQ_Salesforce_CPQ_Admin"],
+        "soql": [
+            {"label": "Custom permission sets", "q": "SELECT Name, Label FROM PermissionSet WHERE IsOwnedByProfile = false AND NamespacePrefix = null ORDER BY Name LIMIT 20"},
+            {"label": "Profiles with ModifyAll", "q": "SELECT Name FROM Profile WHERE PermissionsModifyAllData = true LIMIT 10"},
+        ],
+    },
+}
+
+# Keep old _DOMAIN_QUERIES name as alias for backward compat
+_DOMAIN_QUERIES = {k: v.get("soql", []) for k, v in _DOMAIN_CONFIG.items()}
+
+
 def _soql(org: str, query: str, label: str = "") -> str:
     """Run a SOQL query and return formatted results as a markdown table snippet."""
     try:
@@ -252,7 +346,7 @@ def _live_org_context(user_input: str, org: str, run_id: str, agent_id: str) -> 
         append_activity(run_id, agent_id, "🧠 Task is about the swarm itself — reading swarm source")
         return _swarm_self_context(run_id, agent_id)
 
-    # Org task: detect domains and run SOQL
+    # Org task: detect domains
     text = user_input.lower()
     domains: List[str] = []
     for domain, keywords in _KEYWORD_MAP.items():
@@ -260,28 +354,61 @@ def _live_org_context(user_input: str, org: str, run_id: str, agent_id: str) -> 
             domains.append(domain)
 
     if not domains:
-        # No org-specific domain detected and not swarm-related → skip org query,
-        # return generic context note rather than guessing apex/objects/flow
         return (
-            "_No specific Salesforce domain detected in this request. "
-            "Provide analysis based on general Salesforce best practices "
-            "and the request itself._"
+            "_No specific Salesforce domain detected. "
+            "Provide analysis based on general Salesforce best practices._"
         )
 
     if not org:
         return "_No org configured — run `sfdc-swarm context` to set target org._"
 
-    append_activity(run_id, agent_id, f"🔍 Querying {org} — domains: {', '.join(domains)}")
-
-    sections: List[str] = [f"## Live org data from {org}"]
+    append_activity(run_id, agent_id, f"🔍 Connecting to {org} — domains: {', '.join(domains)}")
+    sections: List[str] = [f"## Live org data from {org}\n"]
 
     for domain in domains:
-        queries = _DOMAIN_QUERIES.get(domain, [])
-        for q in queries:
+        cfg = _DOMAIN_CONFIG.get(domain, {})
+
+        # 1. Discovery SOQL — find out what exists
+        for q in cfg.get("soql", []):
             result = _soql(org, q["q"], q["label"])
             sections.append(result)
-            first_line = result.split("\n")[0][:120]
-            append_activity(run_id, agent_id, f"  {first_line}")
+            append_activity(run_id, agent_id, f"  {result.split(chr(10))[0][:100]}")
+
+        # 2. Retrieve actual metadata source files for fixed specs
+        fixed_specs = cfg.get("retrieve", [])
+        if fixed_specs:
+            retrieved = _retrieve_metadata(org, fixed_specs, domain, run_id, agent_id)
+            sections.append(retrieved)
+
+        # 3. For dynamic domains: retrieve top items found by SOQL
+        if cfg.get("retrieve_soql_names"):
+            soql_res = cfg.get("soql", [])
+            if soql_res:
+                # Get names from the first SOQL result to drive targeted retrieve
+                try:
+                    r = subprocess.run(
+                        [_SF, "data", "query", "--query", soql_res[0]["q"],
+                         "--target-org", org, "--json"],
+                        capture_output=True, text=True, timeout=20,
+                    )
+                    records = json.loads(r.stdout or "{}").get("result", {}).get("records", [])
+                    # Map domain → metadata type + name field
+                    type_map = {
+                        "apex": ("ApexClass", "Name"),
+                        "lwc": ("LightningComponentBundle", "DeveloperName"),
+                        "flow": ("Flow", "MasterLabel"),
+                        "objects": ("CustomObject", "QualifiedApiName"),
+                    }
+                    if domain in type_map and records:
+                        meta_type, name_field = type_map[domain]
+                        # Take top 5 most relevant
+                        specs = [f"{meta_type}:{r.get(name_field, '')}" for r in records[:5] if r.get(name_field)]
+                        if specs:
+                            append_activity(run_id, agent_id, f"  📥 Retrieving top {len(specs)} {domain} items…")
+                            retrieved = _retrieve_metadata(org, specs, f"Top {domain}", run_id, agent_id)
+                            sections.append(retrieved)
+                except Exception:  # noqa: BLE001
+                    pass
 
     return "\n\n".join(sections)
 
