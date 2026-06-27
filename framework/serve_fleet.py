@@ -292,6 +292,27 @@ class FleetHandler(BaseHTTPRequestHandler):
             result = start_orchestrator_background(user_input)
             self._json(result)
             return
+        if path == "/api/cursor-key":
+            # POST to set CURSOR_API_KEY for this session
+            length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(length) if length else b"{}"
+            try:
+                payload = json.loads(body.decode("utf-8"))
+                key = payload.get("key", "").strip()
+                if key:
+                    import os as _os
+                    _os.environ["CURSOR_API_KEY"] = key
+                    self._json({"ok": True, "set": True})
+                else:
+                    self._json({"ok": False, "error": "Empty key"})
+            except Exception as exc:  # noqa: BLE001
+                self._json({"ok": False, "error": str(exc)})
+            return
+        if path == "/api/cursor-key-status":
+            import os as _os
+            has_key = bool(_os.environ.get("CURSOR_API_KEY", ""))
+            self._json({"has_key": has_key})
+            return
         if path == "/api/skill/sync":
             # POST kept for backward compat — live stream is on GET /api/skill/sync
             self._json({"ok": True, "note": "Use GET /api/skill/sync for live SSE stream"})

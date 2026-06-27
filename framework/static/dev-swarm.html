@@ -209,19 +209,36 @@
     </div>
   </aside>
 
-  <div class="main">
-    <div class="topbar">
-      <div>
-        <h1>Agent Orchestrator</h1>
-        <div class="sub">Route → Requirements → Research → Design → Dev → Admin → QA → Docs → Training</div>
+    <div class="main">
+      <div class="topbar">
+        <div>
+          <h1>Agent Orchestrator</h1>
+          <div class="sub">Route → Requirements → Research → Design → Dev → Admin → QA → Docs → Training</div>
+        </div>
+        <div class="badges">
+          <span class="badge" id="run-badge">idle</span>
+          <span class="badge" id="key-badge" style="cursor:pointer" title="Click to set Cursor API key" onclick="toggleKeyPanel()">🔑 API key</span>
+          <span class="badge" id="updated-badge" style="color:var(--dim)">—</span>
+        </div>
       </div>
-      <div class="badges">
-        <span class="badge" id="run-badge">idle</span>
-        <span class="badge" id="updated-badge" style="color:var(--dim)">—</span>
-      </div>
-    </div>
 
-    <!-- Task input -->
+      <!-- Cursor API key setup -->
+      <div id="key-panel" style="display:none;background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.25);border-radius:12px;padding:1rem 1.15rem;margin-bottom:1.1rem">
+        <div style="font-size:.8rem;font-weight:600;margin-bottom:.5rem">🔑 Cursor API Key</div>
+        <div style="font-size:.74rem;color:var(--muted);margin-bottom:.6rem">
+          Agents run via Cursor SDK — each agent uses your Cursor subscription's LLM (Claude, GPT-4, etc.).<br>
+          Get your key at <a href="https://cursor.com/dashboard/integrations" target="_blank" style="color:var(--cyan)">cursor.com/dashboard/integrations</a>
+          or set: <code style="font-size:.7rem">export CURSOR_API_KEY=cursor_...</code> in your shell.
+        </div>
+        <div style="display:flex;gap:.5rem;align-items:center">
+          <input id="key-input" type="password" placeholder="cursor_..." autocomplete="off"
+            style="flex:1;padding:.45rem .75rem;background:var(--bg);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:.78rem" />
+          <button class="btn btn-run" style="padding:.45rem 1rem;font-size:.76rem" onclick="saveKey()">Save</button>
+          <span id="key-msg" style="font-size:.74rem;color:var(--muted)"></span>
+        </div>
+      </div>
+
+      <!-- Task input -->
     <div class="input-card">
       <div class="input-label">What do you want to build?</div>
       <textarea class="task-input" id="task-input"
@@ -579,6 +596,31 @@
 
   document.getElementById('btn-run').onclick = startOrchestrator;
 
+  /* ── API key panel ── */
+  function toggleKeyPanel() {
+    const p = document.getElementById('key-panel');
+    p.style.display = p.style.display === 'none' ? 'block' : 'none';
+  }
+  async function saveKey() {
+    const key = document.getElementById('key-input').value.trim();
+    if (!key) return;
+    try {
+      const res = await fetch('/api/cursor-key', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ key }),
+      });
+      const d = await res.json();
+      document.getElementById('key-msg').textContent = d.ok ? '✅ Saved for this session' : '❌ ' + d.error;
+      document.getElementById('key-input').value = '';
+      if (d.ok) {
+        document.getElementById('key-badge').textContent = '🔑 key set';
+        document.getElementById('key-badge').style.borderColor = 'rgba(52,211,153,.4)';
+        document.getElementById('key-badge').style.color = 'var(--green)';
+        setTimeout(() => { document.getElementById('key-panel').style.display = 'none'; }, 1500);
+      }
+    } catch(e) { document.getElementById('key-msg').textContent = e.message; }
+  }
+
   /* ── Boot ── */
   (async () => {
     try {
@@ -590,6 +632,25 @@
         renderPipeline([], '');
       }
     } catch(e) {}
+
+    // Check if CURSOR_API_KEY is already set
+    try {
+      const kr = await fetch('/api/cursor-key-status');
+      const kd = await kr.json();
+      const badge = document.getElementById('key-badge');
+      if (kd.has_key) {
+        badge.textContent = '🔑 key set';
+        badge.style.borderColor = 'rgba(52,211,153,.4)';
+        badge.style.color = 'var(--green)';
+      } else {
+        badge.textContent = '🔑 set API key';
+        badge.style.borderColor = 'rgba(251,191,36,.4)';
+        badge.style.color = 'var(--amber)';
+        // Auto-open the key panel so user knows they need to set it
+        document.getElementById('key-panel').style.display = 'block';
+      }
+    } catch(e) {}
+
     refresh();
   })();
 </script>
