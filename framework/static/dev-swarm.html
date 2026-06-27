@@ -417,6 +417,8 @@
   let lastActivityCount = 0;
   let PIPE_NODES = [];
   let TEAM_META = {};
+  let lastPipelineHash = '';   // prevent pipeline re-render on every tick
+  let lastAgentHash = '';       // prevent agent grid re-render on every tick
 
   const STAGE_DESCS = {
     route: 'Analysing your request and picking the right teams.',
@@ -469,6 +471,7 @@
   }
 
   /* ── Console feed ── */
+  let userScrolledConsole = false;
   function addLog(ts, stage, msg, lvl) {
     const time = ts ? ts.slice(11, 19) : new Date().toTimeString().slice(0,8);
     const stageKey = (stage || 'system').toLowerCase().replace(/[^a-z]/g, '');
@@ -476,9 +479,21 @@
     logLines.push(`<div class="log-line"><span class="log-ts">${esc(time)}</span>${stageLabel}<span class="log-msg ${lvl || ''}">${esc(msg)}</span></div>`);
     if (logLines.length > 200) logLines = logLines.slice(-200);
     const feed = document.getElementById('console-feed');
+    // Only auto-scroll if user hasn't manually scrolled up
+    const atBottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 40;
     feed.innerHTML = logLines.join('');
-    feed.scrollTop = feed.scrollHeight;
+    if (!userScrolledConsole || atBottom) feed.scrollTop = feed.scrollHeight;
   }
+  // Detect manual scroll in the console
+  document.addEventListener('DOMContentLoaded', () => {
+    const feed = document.getElementById('console-feed');
+    if (feed) {
+      feed.addEventListener('scroll', () => {
+        const atBottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 40;
+        userScrolledConsole = !atBottom;
+      });
+    }
+  });
 
   /* ── Stage icons ── */
   const STAGE_ICONS = {
@@ -530,9 +545,12 @@
       </div>`;
     }).join('');
 
-    // Scroll active node into view
+    // Scroll active node within the pipeline strip only — never hijacks page scroll
     const activeEl = pipe.querySelector('.pipe-node-box.active');
-    if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    if (activeEl && pipe.scrollWidth > pipe.clientWidth) {
+      const left = activeEl.parentElement.offsetLeft - pipe.clientWidth / 2 + 50;
+      pipe.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+    }
   }
 
     /* ── Current stage card ── */
@@ -619,7 +637,12 @@
     // Pipeline
     const steps = run.pipeline_steps || [];
     const activeNode = run.active_graph_node || '';
-    renderPipeline(steps, activeNode, run);
+    // Only re-render pipeline when state actually changes (prevents scroll jank)
+    const pipeHash = JSON.stringify(steps.map(s => s.id + s.status)) + activeNode;
+    if (pipeHash !== lastPipelineHash) {
+      lastPipelineHash = pipeHash;
+      renderPipeline(steps, activeNode, run);
+    }
 
     // Progress
     const prog = run.progress || {};
@@ -629,7 +652,12 @@
 
     renderNow(run);
     renderActiveAgent(run);
-    renderTeams(run);
+    // Only re-render teams when agent statuses change
+    const agentHash = JSON.stringify((run.agents || []).map(a => a.id + a.status + (a.model||'')));
+    if (agentHash !== lastAgentHash) {
+      lastAgentHash = agentHash;
+      renderTeams(run);
+    }
 
     // Activity log (incremental)
     const activity = run.activity || [];

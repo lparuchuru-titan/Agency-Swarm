@@ -175,45 +175,111 @@ _DOMAIN_QUERIES: Dict[str, List[Dict[str, str]]] = {
 _KEYWORD_MAP = {
     "cpq": ["cpq", "quote", "quoting", "bundle", "product", "price", "sbqq", "pantheon", "discount"],
     "billing": ["billing", "invoice", "revenue", "blng", "tax", "payment", "finance", "order"],
-    "apex": ["apex", "trigger", "class", "code", "coverage", "test"],
+    "apex": ["apex", "trigger", "class", "code", "coverage"],
     "lwc": ["lwc", "lightning", "component", "aura", "ui", "frontend"],
     "flow": ["flow", "automation", "declarative", "process"],
     "objects": ["object", "field", "schema", "data model", "metadata"],
     "security": ["security", "permission", "profile", "sharing", "fls", "access"],
 }
 
+# Keywords that indicate the task is about the SWARM ITSELF, not the Salesforce org
+_SWARM_SELF_KEYWORDS = [
+    "swarm", "agent", "orchestrat", "fleet", "skill", "intent router",
+    "agentic", "multi-agent", "agency", "cursor sdk", "llm", "routing",
+    "improve.*swarm", "make.*swarm", "swarm.*better", "swarm.*powerful",
+    "modern.*agent", "agent.*framework", "contest.*team", "split.*team",
+]
+
+
+def _is_about_swarm(user_input: str) -> bool:
+    """True when the user is asking about the swarm/agent framework, not the Salesforce org."""
+    import re as _re
+    text = user_input.lower()
+    return any(_re.search(kw, text) for kw in _SWARM_SELF_KEYWORDS)
+
+
+def _swarm_self_context(run_id: str, agent_id: str) -> str:
+    """
+    Build context by reading the swarm's own codebase — used when the task
+    is about improving/analyzing the swarm itself, not the Salesforce org.
+    """
+    append_activity(run_id, agent_id, "🔍 Reading swarm codebase (self-analysis)…")
+    swarm_dir = Path(__file__).parent
+    sections: List[str] = ["## Swarm self-context (your own codebase)\n"]
+
+    # agents_registry.py — what agents exist
+    reg_path = swarm_dir / "agents_registry.py"
+    if reg_path.exists():
+        sections.append(f"### agents_registry.py (teams + agents)\n{reg_path.read_text(encoding='utf-8')[:3000]}")
+
+    # intent_router.py — how routing works
+    router_path = swarm_dir / "intent_router.py"
+    if router_path.exists():
+        sections.append(f"### intent_router.py (routing logic)\n{router_path.read_text(encoding='utf-8')[:2000]}")
+
+    # Agent instructions — what each agent is told to do
+    agency_dir = REPO_ROOT / ".cursor" / "agency"
+    if agency_dir.is_dir():
+        for instr in sorted(agency_dir.rglob("instructions.md"))[:6]:
+            agent_name = instr.parent.name
+            text = instr.read_text(encoding="utf-8")[:800]
+            sections.append(f"### .cursor/agency/{agent_name}/instructions.md\n{text}")
+
+    # Skill feed registry — what each agent knows
+    feed_reg = swarm_dir / "skill_feed_registry.py"
+    if feed_reg.exists():
+        sections.append(f"### skill_feed_registry.py (agent knowledge feeds)\n{feed_reg.read_text(encoding='utf-8')[:1500]}")
+
+    # Latest skill KB files summary
+    kb_sfdc = REPO_ROOT / "knowledge-base" / "sfdc"
+    if kb_sfdc.is_dir():
+        topics = sorted(kb_sfdc.glob("*.md"), key=lambda p: p.stat().st_mtime, reverse=True)[:5]
+        for t in topics:
+            sections.append(f"### KB: {t.name}\n{t.read_text(encoding='utf-8')[:400]}")
+
+    append_activity(run_id, agent_id, f"  Read {len(sections)-1} swarm source files")
+    return "\n\n".join(sections)[:8000]
+
 
 def _live_org_context(user_input: str, org: str, run_id: str, agent_id: str) -> str:
     """
-    Detect which domains the request touches, run relevant SOQL,
-    and return formatted org context for injection into the agent prompt.
+    Return context appropriate for the request:
+    - If request is about the swarm itself → read swarm source files
+    - If request is about the Salesforce org → run SOQL queries
     """
-    text = user_input.lower()
+    # Self-referential: task is about the swarm/agents, not the org
+    if _is_about_swarm(user_input):
+        append_activity(run_id, agent_id, "🧠 Task is about the swarm itself — reading swarm source")
+        return _swarm_self_context(run_id, agent_id)
 
-    # Detect relevant domains
+    # Org task: detect domains and run SOQL
+    text = user_input.lower()
     domains: List[str] = []
     for domain, keywords in _KEYWORD_MAP.items():
         if any(kw in text for kw in keywords):
             domains.append(domain)
 
-    # Default to broad scan if no specific domain detected
     if not domains:
-        domains = ["apex", "objects", "flow"]
+        # No org-specific domain detected and not swarm-related → skip org query,
+        # return generic context note rather than guessing apex/objects/flow
+        return (
+            "_No specific Salesforce domain detected in this request. "
+            "Provide analysis based on general Salesforce best practices "
+            "and the request itself._"
+        )
 
     if not org:
         return "_No org configured — run `sfdc-swarm context` to set target org._"
 
     append_activity(run_id, agent_id, f"🔍 Querying {org} — domains: {', '.join(domains)}")
 
-    sections: List[str] = []
-    sections.append(f"## Live org data from {org}")
+    sections: List[str] = [f"## Live org data from {org}"]
 
     for domain in domains:
         queries = _DOMAIN_QUERIES.get(domain, [])
         for q in queries:
             result = _soql(org, q["q"], q["label"])
             sections.append(result)
-            # Brief activity update
             first_line = result.split("\n")[0][:120]
             append_activity(run_id, agent_id, f"  {first_line}")
 
