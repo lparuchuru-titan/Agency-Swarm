@@ -1,66 +1,99 @@
 /**
- * Cursor SDK agent runner — called by agent_nodes.py via subprocess.
+ * Cursor SDK agent runner — streaming version.
+ * Uses Agent.create() + run.messages() so each text chunk is emitted
+ * immediately as it arrives, giving real-time progress in FleetView.
  *
  * Usage:
  *   node cursor_agent_runner.js --api-key <key> --model <model> --cwd <path> --prompt <prompt>
  *
- * Streams each assistant text chunk as a JSON line: {"type":"text","text":"..."}
- * Final line: {"type":"done","status":"finished"|"error","result":"..."}
+ * Each output line is a JSON event:
+ *   {"type":"text","text":"..."}    — streaming chunk
+ *   {"type":"done","status":"finished","result":"..."}
+ *   {"type":"error","text":"..."}
  */
 
 const path = require("path");
-// Try local node_modules first, then /tmp (where npm install ran)
+
+// Load @cursor/sdk — try local node_modules first, then /tmp
 let Agent;
 try {
   ({ Agent } = require(path.join(__dirname, "node_modules/@cursor/sdk")));
 } catch {
-  ({ Agent } = require("/tmp/node_modules/@cursor/sdk"));
+  try {
+    ({ Agent } = require("/tmp/node_modules/@cursor/sdk"));
+  } catch (e) {
+    process.stdout.write(JSON.stringify({ type: "error", text: "Cannot load @cursor/sdk: " + e.message }) + "\n");
+    process.exit(1);
+  }
+}
+
+function emit(obj) {
+  process.stdout.write(JSON.stringify(obj) + "\n");
 }
 
 async function main() {
   const args = process.argv.slice(2);
-  const get = (flag) => {
-    const i = args.indexOf(flag);
-    return i !== -1 ? args[i + 1] : null;
-  };
+  const get = (flag) => { const i = args.indexOf(flag); return i !== -1 ? args[i + 1] : null; };
 
   const apiKey = get("--api-key") || process.env.CURSOR_API_KEY;
-  const model = get("--model") || "auto";
-  const cwd = get("--cwd") || process.cwd();
-  const promptArg = get("--prompt");
+  const model  = get("--model") || "auto";
+  const cwd    = get("--cwd") || process.cwd();
+  const prompt = get("--prompt");
 
   if (!apiKey) {
-    process.stdout.write(
-      JSON.stringify({ type: "error", text: "CURSOR_API_KEY not set. Get yours at cursor.com/dashboard/integrations" }) + "\n"
-    );
+    emit({ type: "error", text: "CURSOR_API_KEY not set — get yours at cursor.com/dashboard/integrations" });
     process.exit(1);
   }
-
-  if (!promptArg) {
-    process.stdout.write(JSON.stringify({ type: "error", text: "No --prompt provided" }) + "\n");
+  if (!prompt) {
+    emit({ type: "error", text: "No --prompt provided" });
     process.exit(1);
   }
 
   try {
-    const run = await Agent.prompt(promptArg, {
+    // Use create+send+stream for real-time output
+    let result = "";
+    let status = "finished";
+
+    const agent = await Agent.create({
       apiKey,
       model: { id: model },
       local: { cwd },
     });
 
-    // Emit the result text
-    const resultText = run.result || "";
-    if (resultText) {
-      process.stdout.write(JSON.stringify({ type: "text", text: resultText }) + "\n");
+    const run = await agent.send(prompt);
+
+    // Stream each message chunk as it arrives
+    for await (const message of run.stream()) {
+      if (message.type === "assistant") {
+        for (const block of (message.message?.content || [])) {
+          if (block.type === "text" && block.text) {
+            result += block.text;
+            emit({ type: "text", text: block.text });
+          }
+        }
+      }
     }
 
-    process.stdout.write(
-      JSON.stringify({ type: "done", status: run.status, result: resultText }) + "\n"
-    );
+    const final = await run.wait();
+    status = final?.status || "finished";
+
+    // If streaming gave us nothing but wait() has a result, use that
+    if (!result && final?.result) {
+      result = final.result;
+      emit({ type: "text", text: result });
+    }
+
+    // Dispose the agent
+    if (typeof agent[Symbol.asyncDispose] === "function") {
+      await agent[Symbol.asyncDispose]();
+    } else if (typeof agent.close === "function") {
+      agent.close();
+    }
+
+    emit({ type: "done", status, result });
+
   } catch (err) {
-    process.stdout.write(
-      JSON.stringify({ type: "error", text: err.message || String(err) }) + "\n"
-    );
+    emit({ type: "error", text: err.message || String(err) });
     process.exit(1);
   }
 }

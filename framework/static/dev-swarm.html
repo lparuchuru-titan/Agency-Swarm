@@ -491,6 +491,22 @@
         addLog(a.ts, stage, a.message, lvl);
       });
       lastActivityCount = activity.length;
+    } else if (isRunning && activity.length > 0) {
+      // Show a heartbeat pulse in the console so user knows it's not frozen
+      const feed = document.getElementById('console-feed');
+      const pulse = feed.querySelector('.pulse-line');
+      const dots = ['⠋','⠙','⠹','⠸','⠼','⠴','⠦','⠧','⠇','⠏'];
+      const dot = dots[Math.floor(Date.now()/200) % dots.length];
+      if (pulse) {
+        pulse.textContent = `${dot} Cursor agent working…`;
+      } else {
+        const el = document.createElement('div');
+        el.className = 'log-line pulse-line';
+        el.style.cssText = 'color:#4a4a6a;font-style:italic;';
+        el.textContent = `${dot} Cursor agent working…`;
+        feed.appendChild(el);
+        feed.scrollTop = feed.scrollHeight;
+      }
     }
 
     // Delivery
@@ -529,7 +545,8 @@
         document.getElementById('stage-hero').style.display = 'block';
         document.getElementById('now-cols').style.display = 'grid';
       }
-      pollMs = swarmActive ? 300 : 3000;
+      // Fast poll when running — agents stream activity lines
+      pollMs = swarmActive ? 200 : 3000;
 
       const run = (data.runs || []).find(r => r.status === 'running') || data.active_run || (data.runs || [])[0];
       if (run) renderRun(run, status);
