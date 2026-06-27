@@ -292,6 +292,35 @@ class FleetHandler(BaseHTTPRequestHandler):
             result = start_orchestrator_background(user_input)
             self._json(result)
             return
+        if path == "/api/run-plan":
+            # Return PLAN.md + agent assignments for the latest run
+            from config import FLEET_DIR
+            import json as _json
+            state_path = FLEET_DIR / "state.json"
+            if not state_path.exists():
+                self._json({"ok": False})
+                return
+            try:
+                runs = _json.loads(state_path.read_text(encoding="utf-8")).get("runs", [])
+                run = runs[-1] if runs else {}
+                run_id = run.get("run_id", "")
+                plan_text = ""
+                if run_id:
+                    plan_path = FLEET_DIR / "runs" / run_id / "PLAN.md"
+                    if plan_path.exists():
+                        plan_text = plan_path.read_text(encoding="utf-8")
+                self._json({
+                    "run_id": run_id,
+                    "intent": run.get("intent", ""),
+                    "router_method": run.get("router_method", ""),
+                    "pipeline": run.get("pipeline", []),
+                    "agents": run.get("agents", []),
+                    "plan_text": plan_text,
+                    "status": run.get("status", ""),
+                })
+            except Exception as exc:  # noqa: BLE001
+                self._json({"ok": False, "error": str(exc)})
+            return
         if path == "/api/run-usage":
             # Return usage for the most recent run
             import glob as _glob

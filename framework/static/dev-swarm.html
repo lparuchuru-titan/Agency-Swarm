@@ -327,8 +327,41 @@
       </div>
     </div>
 
-    <!-- Delivery banner (shown when complete) -->
-    <div class="delivery-card" id="delivery-card" style="display:none">
+      <!-- Routing Decision card (shown once a run starts) -->
+      <div id="routing-card" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:1rem 1.15rem;margin-bottom:1.1rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem">
+          <div style="font-size:.8rem;font-weight:600">🧭 Routing Decision</div>
+          <div style="display:flex;gap:.4rem;flex-wrap:wrap" id="routing-badges"></div>
+        </div>
+        <div id="routing-agents" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.5rem;margin-bottom:.75rem"></div>
+        <details style="font-size:.72rem;color:var(--muted)">
+          <summary style="cursor:pointer;color:var(--dim)">View full plan</summary>
+          <pre id="routing-plan" style="margin-top:.5rem;background:var(--bg);padding:.75rem;border-radius:8px;white-space:pre-wrap;font-size:.68rem;line-height:1.5;max-height:200px;overflow-y:auto"></pre>
+        </details>
+      </div>
+
+      <!-- Active agent hero (shown while running) -->
+      <div id="active-agent-hero" style="display:none;background:linear-gradient(135deg,rgba(99,102,241,.1),rgba(34,211,238,.06));border:1px solid rgba(99,102,241,.3);border-radius:var(--r-lg);padding:1rem 1.15rem;margin-bottom:1.1rem">
+        <div style="font-size:.72rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.35rem">Currently executing</div>
+        <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
+          <div style="font-size:1.8rem" id="hero-icon">⚙️</div>
+          <div style="flex:1">
+            <div style="font-size:1.05rem;font-weight:700" id="hero-agent-name">—</div>
+            <div style="font-size:.74rem;color:var(--muted);margin-top:.1rem" id="hero-agent-desc"></div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:.65rem;color:var(--dim);margin-bottom:.2rem">LLM</div>
+            <div style="font-size:.8rem;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--cyan)" id="hero-model">auto</div>
+          </div>
+        </div>
+        <div style="margin-top:.65rem;height:3px;background:var(--border);border-radius:99px;overflow:hidden">
+          <div style="height:100%;background:linear-gradient(90deg,var(--accent),var(--cyan));border-radius:99px;animation:loading-bar 1.8s ease infinite"></div>
+        </div>
+      </div>
+      <style>@keyframes loading-bar{0%{width:0%;margin-left:0}70%{width:100%;margin-left:0}100%{width:0%;margin-left:100%}}</style>
+
+      <!-- Delivery banner (shown when complete) -->
+      <div class="delivery-card" id="delivery-card" style="display:none">
       <h3>✅ Orchestrator complete</h3>
       <div class="note">Work orders written — open them in Cursor to run each specialist agent.</div>
       <div class="path" id="delivery-path"></div>
@@ -590,6 +623,7 @@
     document.getElementById('progress-label').textContent = `${prog.done || 0} / ${prog.total || (run.agents || []).length} · ${Math.round(pct)}%`;
 
     renderNow(run);
+    renderActiveAgent(run);
     renderTeams(run);
 
     // Activity log (incremental)
@@ -631,6 +665,76 @@
       addLog(null, 'system', '✅ Run complete — open work orders in Cursor', 'success');
       document.getElementById('btn-msg').textContent = '';
     }
+  }
+
+  /* ── Routing decision card ── */
+  const AGENT_DESCS = {
+    'kb-researcher': 'Searches KB and connected Jira/Confluence for context.',
+    'jira-analyst': 'Reads Jira stories, epics, and acceptance criteria.',
+    'technical-architect': 'Produces architecture blueprints and trade-off analysis.',
+    'apex-developer': 'Writes bulkified Apex, triggers, and CPQ service classes.',
+    'ui-developer': 'Builds LWC components and NextGen quoting UI.',
+    'codebase-worker': 'Makes repo-aware changes across force-app/.',
+    'salesforce-admin': 'Handles metadata, FLS, flows, and manifests.',
+    'promotion-engineer': 'Plans sandbox to UAT promotion and deploy steps.',
+    'qa-playwright': 'Writes Playwright E2E tests and regression specs.',
+    'qa-apex-backend': 'Writes Apex test classes and verifies with SOQL.',
+    'change-documenter': 'Writes HTML explainers, change docs, delivery summaries.',
+    'org-analyst': 'Audits org health, security, technical debt.',
+    'reverse-engineer': 'Extracts BRD, data dictionary, ERD from metadata.',
+    'pr-reviewer': 'Reviews code for security, bulkification, test quality.',
+  };
+  const INTENT_LABELS = {
+    document:'documentation', implement:'implementation', design:'architecture',
+    jira_only:'requirements', full_delivery:'full delivery', test:'testing',
+    kb_refresh:'KB refresh', discover:'discovery', review:'code review',
+  };
+  let lastRoutingRunId = '';
+  async function loadRoutingDecision() {
+    try {
+      const res = await fetch('/api/run-plan');
+      const d = await res.json();
+      if (!d.run_id || d.run_id === lastRoutingRunId) return;
+      lastRoutingRunId = d.run_id;
+      document.getElementById('routing-card').style.display = 'block';
+      const intent = INTENT_LABELS[d.intent] || d.intent || 'auto';
+      const router = d.router_method === 'llm' ? 'LLM routing' : 'Rules routing';
+      const steps = (d.pipeline || []).length;
+      document.getElementById('routing-badges').innerHTML = [
+        `<span style="padding:.2rem .65rem;border-radius:999px;font-size:.65rem;font-weight:600;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#a5b4fc">intent: ${esc(intent)}</span>`,
+        `<span style="padding:.2rem .65rem;border-radius:999px;font-size:.65rem;font-weight:600;background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.25);color:var(--cyan)">${esc(router)}</span>`,
+        `<span style="padding:.2rem .65rem;border-radius:999px;font-size:.65rem;font-weight:600;background:var(--surface2);border:1px solid var(--border);color:var(--muted)">${steps} stage${steps!==1?'s':''}</span>`,
+      ].join('');
+      const agents = d.agents || [];
+      document.getElementById('routing-agents').innerHTML = agents.map(a => {
+        const desc = AGENT_DESCS[a.id] || a.focus || '';
+        const sc = a.status === 'running' ? 'var(--accent)' : (a.status === 'done' || a.status === 'written' ? 'var(--green)' : 'var(--dim)');
+        const ml = a.model ? `<span style="font-size:.58rem;padding:.1rem .35rem;border-radius:3px;background:rgba(34,211,238,.1);color:#67e8f9;font-family:'JetBrains Mono',monospace;margin-left:4px">${esc(a.model)}</span>` : '';
+        return `<div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:.7rem .8rem">
+          <div style="font-weight:600;font-size:.75rem;display:flex;align-items:center;gap:.35rem">
+            <span style="width:7px;height:7px;border-radius:50%;background:${sc};flex-shrink:0"></span>
+            ${esc(a.title || a.id)}${ml}</div>
+          <div style="font-size:.63rem;color:var(--dim);font-family:'JetBrains Mono',monospace;margin:.2rem 0">${esc(a.id)}</div>
+          <div style="font-size:.68rem;color:var(--muted);line-height:1.4">${esc(desc)}</div>
+          <div style="font-size:.62rem;margin-top:.3rem;color:${sc};font-weight:600;text-transform:uppercase">${esc(a.status||'pending')}</div>
+        </div>`;
+      }).join('') || '<div style="color:var(--dim);font-size:.74rem">No agents assigned</div>';
+      document.getElementById('routing-plan').textContent = d.plan_text || '';
+    } catch(e2) {}
+  }
+
+  /* ── Active agent hero ── */
+  function renderActiveAgent(run) {
+    const hero = document.getElementById('active-agent-hero');
+    if (!run || run.status !== 'running') { hero.style.display = 'none'; return; }
+    const active = (run.agents || []).find(a => a.status === 'running');
+    if (!active) { hero.style.display = 'none'; return; }
+    hero.style.display = 'block';
+    const sk = (active.team_id || '').toLowerCase().replace(/[^a-z]/g,'');
+    document.getElementById('hero-icon').textContent = STAGE_ICONS[sk] || 'EXE';
+    document.getElementById('hero-agent-name').textContent = active.title || active.id;
+    document.getElementById('hero-agent-desc').textContent = AGENT_DESCS[active.id] || 'Running…';
+    document.getElementById('hero-model').textContent = active.model || 'auto';
   }
 
   /* ── Usage panel ── */
@@ -708,7 +812,8 @@
       if (run) renderRun(run, status);
       if (status.last_error && !running) document.getElementById('btn-msg').textContent = 'Error: ' + status.last_error;
 
-      // Refresh usage panel
+      // Refresh routing decision + usage
+      await loadRoutingDecision();
       try {
         const ur = await fetch('/api/run-usage');
         const ud = await ur.json();
