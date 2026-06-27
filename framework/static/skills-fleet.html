@@ -85,7 +85,7 @@
           <div class="msg" id="updated">—</div>
         </div>
         <div style="display:flex;gap:.5rem;align-items:center">
-          <span class="badge" id="live-badge">scanning</span>
+          <span class="badge" id="live-badge">idle</span>
           <button class="btn" id="btn-refresh-manifest" type="button">Sync skill feeds</button>
         </div>
       </div>
@@ -110,12 +110,15 @@
       </div>
 
       <div class="card">
-        <div class="card-title">Live usage — orchestrator runs + recent Cursor chat skill reads</div>
+        <div class="card-title">Activity history — past orchestrator runs &amp; skills used in Cursor chat sessions</div>
+        <div class="msg" style="font-size:.7rem;margin-bottom:.4rem;color:#888">
+          This is <strong>history</strong> scanned from past chat transcripts. Agents are only active when you give them a task. Nothing runs automatically.
+        </div>
         <div class="activity" id="activity"></div>
       </div>
     </div>
   </div>
-  <footer>Polls every 2s · orchestrator + transcript scan · not full Cursor IDE telemetry</footer>
+  <footer>Polls every 3s · reads orchestrator state + past chat transcripts · agents only run when you ask them to</footer>
 
   <script>
     let pollMs = 2000;
@@ -150,11 +153,17 @@
         const d = await res.json();
         document.getElementById('updated').textContent = 'Updated ' + (d.timestamp || '').slice(11, 19);
         document.getElementById('nav-ctx').textContent = `${d.project || '—'} · org ${d.target_org || '—'}`;
-        const live = d.orchestrator_running || (d.active_skill_ids || []).length > 0;
+        // Badge only lights up green when orchestrator is actively running a task.
+        // Transcript history (past skill reads in old chats) does NOT count as "live".
         const badge = document.getElementById('live-badge');
-        badge.textContent = d.orchestrator_running ? 'orchestrator running' : (live ? 'recent activity' : 'idle');
-        badge.className = 'badge ' + (d.orchestrator_running ? 'live' : '');
-        pollMs = d.orchestrator_running ? 800 : 2000;
+        if (d.orchestrator_running) {
+          badge.textContent = 'orchestrator running';
+          badge.className = 'badge live';
+        } else {
+          badge.textContent = 'idle';
+          badge.className = 'badge';
+        }
+        pollMs = d.orchestrator_running ? 800 : 3000;
 
         const sum = d.summary || {};
         document.getElementById('stats').innerHTML = [
@@ -186,14 +195,18 @@
            Connected: ${esc(shortPath(fs.connected_index))} · ${esc((fs.connected_mtime || '').slice(0, 10))}<br>
            ${(fs.tiers || []).map(t => `<span class="tag">${esc(t.label)}: ${esc(t.feeds)}</span>`).join(' ')}`;
 
+        // Activity = past chat history (transcript scan) + orchestrator run history.
+        // NOT live execution — just a log of what was used in previous sessions.
         document.getElementById('activity').innerHTML = (d.live_activity || []).map(e => {
-          const ts = (e.ts || '').slice(11, 19);
-          const label = e.kind === 'subagent' ? `subagent → ${e.target}` :
-            e.kind === 'skill-read' ? `read skill ${e.target}` :
-            `${e.source}: ${e.agent_name || e.agent_id} [${e.status || ''}]`;
+          const dateStr = (e.ts || '').slice(0, 10);
+          const timeStr = (e.ts || '').slice(11, 16);
+          const label = e.kind === 'subagent' ? `launched subagent: ${e.target}` :
+            e.kind === 'skill-read' ? `skill used: ${e.target}` :
+            `orchestrator: ${e.agent_name || e.agent_id} [${e.status || ''}]`;
           const skills = (e.skills || []).map(s => `<span class="tag">${esc(s)}</span>`).join('');
-          return `<div class="act-line"><span class="act-ts">${esc(ts)}</span><span>${esc(label)} ${skills}</span></div>`;
-        }).join('') || '<div class="msg">No recent activity</div>';
+          const source = e.source === 'cursor-chat' ? '💬 chat' : '🤖 orchestrator';
+          return `<div class="act-line"><span class="act-ts" title="${esc(e.ts || '')}">${esc(dateStr)} ${esc(timeStr)}</span><span>${source} · ${esc(label)} ${skills}</span></div>`;
+        }).join('') || '<div class="msg">No activity history yet — agents will appear here when you use them.</div>';
       } catch (e) { console.error(e); }
       setTimeout(refresh, pollMs);
     }
