@@ -336,6 +336,8 @@ def run_research_team(state: Dict[str, Any]) -> Dict[str, Any]:
                 conn_parts.append(f"### {p.name}\n{p.read_text(encoding='utf-8')[:1000]}")
     connected_ctx = "\n\n".join(conn_parts)[:2000] or ""
 
+    connected_section = ("Connected indexes:\n" + connected_ctx) if connected_ctx else ""
+
     prompt = f"""You are a Salesforce analyst with live access to org data.
 Project: {ctx.get('projectName','—')} · Org: {org}
 
@@ -351,7 +353,7 @@ REQUEST: {state['user_input']}
 {org_data}
 === END ORG DATA ===
 
-{"Connected indexes:\\n" + connected_ctx if connected_ctx else ""}
+{connected_section}
 
 Based on the ACTUAL data above, produce:
 1. **What exists in this org** — specific components, classes, objects found (cite actual names from the data)
@@ -587,6 +589,12 @@ def run_documentation_team(state: Dict[str, Any]) -> Dict[str, Any]:
         else:
             org_data = ""
 
+        org_section = (
+            "=== LIVE ORG DATA ===\n" + org_data + "\n=== END ==="
+            if org_data else ""
+        )
+        prior_section = artifact_content[:5000] or "No prior analysis available."
+
         prompt = f"""You are a Salesforce technical documentation specialist.
 Project: {ctx.get('projectName','—')} · Org: {org}
 
@@ -598,10 +606,10 @@ TASK: Produce comprehensive documentation based on REAL org data and analysis.
 
 REQUEST: {state['user_input']}
 
-{"=== LIVE ORG DATA ===" + chr(10) + org_data + chr(10) + "=== END ===" if org_data else ""}
+{org_section}
 
 Prior agent analysis:
-{artifact_content[:5000] or 'No prior analysis available.'}
+{prior_section}
 
 Produce detailed documentation:
 1. **Overview** — what this functionality does in this org (2-3 paragraphs)
