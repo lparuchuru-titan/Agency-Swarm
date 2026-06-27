@@ -35,10 +35,12 @@ async function main() {
   const args = process.argv.slice(2);
   const get = (flag) => { const i = args.indexOf(flag); return i !== -1 ? args[i + 1] : null; };
 
-  const apiKey = get("--api-key") || process.env.CURSOR_API_KEY;
-  const model  = get("--model") || "auto";
-  const cwd    = get("--cwd") || process.cwd();
-  const prompt = get("--prompt");
+  const apiKey    = get("--api-key") || process.env.CURSOR_API_KEY;
+  const modelArg  = get("--model") || "auto";
+  const cwd       = get("--cwd") || process.cwd();
+  const prompt    = get("--prompt");
+  const agentId   = get("--agent-id") || "agent";
+  const agentName = get("--agent-name") || agentId;
 
   if (!apiKey) {
     emit({ type: "error", text: "CURSOR_API_KEY not set — get yours at cursor.com/dashboard/integrations" });
@@ -49,14 +51,17 @@ async function main() {
     process.exit(1);
   }
 
+  // Announce which agent + model is starting
+  emit({ type: "agent_start", agent_id: agentId, agent_name: agentName, model: modelArg });
+
   try {
-    // Use create+send+stream for real-time output
     let result = "";
     let status = "finished";
+    let resolvedModel = modelArg;
 
     const agent = await Agent.create({
       apiKey,
-      model: { id: model },
+      model: { id: modelArg },
       local: { cwd },
     });
 
@@ -64,6 +69,11 @@ async function main() {
 
     // Stream each message chunk as it arrives
     for await (const message of run.stream()) {
+      // Try to capture the actual model name from the message metadata
+      if (message.model && message.model !== resolvedModel) {
+        resolvedModel = message.model;
+        emit({ type: "model_resolved", model: resolvedModel });
+      }
       if (message.type === "assistant") {
         for (const block of (message.message?.content || [])) {
           if (block.type === "text" && block.text) {
@@ -76,6 +86,7 @@ async function main() {
 
     const final = await run.wait();
     status = final?.status || "finished";
+    if (final?.model) resolvedModel = final.model;
 
     // If streaming gave us nothing but wait() has a result, use that
     if (!result && final?.result) {
@@ -90,7 +101,7 @@ async function main() {
       agent.close();
     }
 
-    emit({ type: "done", status, result });
+    emit({ type: "done", status, result, model: resolvedModel });
 
   } catch (err) {
     emit({ type: "error", text: err.message || String(err) });

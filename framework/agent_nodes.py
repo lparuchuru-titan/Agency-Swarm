@@ -227,6 +227,7 @@ def _invoke_cursor_agent(
         "--api-key", api_key,
         "--model", _MODEL,
         "--cwd", str(REPO_ROOT),
+        "--agent-id", agent_id,
         "--prompt", prompt,
     ]
 
@@ -243,16 +244,35 @@ def _invoke_cursor_agent(
                 continue
             try:
                 ev = json.loads(raw_line)
-                if ev.get("type") == "text":
+                ev_type = ev.get("type", "")
+
+                if ev_type == "agent_start":
+                    model_label = ev.get("model", "auto")
+                    append_activity(run_id, agent_id,
+                        f"🤖 Agent: {ev.get('agent_id','?')} · LLM: {model_label}")
+                    # Store model on agent record so UI can display it
+                    update_agent(run_id, agent_id, {"model": model_label})
+
+                elif ev_type == "model_resolved":
+                    model_label = ev.get("model", "")
+                    if model_label:
+                        append_activity(run_id, agent_id, f"🧠 LLM resolved: {model_label}")
+                        update_agent(run_id, agent_id, {"model": model_label})
+
+                elif ev_type == "text":
                     chunk = ev.get("text", "")
                     output_text += chunk
-                    # Stream first line of each chunk to activity
                     first = chunk.strip().split("\n")[0][:200]
                     if first:
                         append_activity(run_id, agent_id, first)
-                elif ev.get("type") == "done":
+
+                elif ev_type == "done":
                     output_text = ev.get("result", output_text)
-                elif ev.get("type") == "error":
+                    model_done = ev.get("model", "")
+                    if model_done:
+                        update_agent(run_id, agent_id, {"model": model_done})
+
+                elif ev_type == "error":
                     append_activity(run_id, agent_id, "❌ " + ev.get("text", ""))
                     return ev.get("text", "Agent error")
             except json.JSONDecodeError:

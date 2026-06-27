@@ -441,7 +441,7 @@
   };
 
   /* ── Pipeline diagram render ── */
-  function renderPipeline(steps, activeNode) {
+  function renderPipeline(steps, activeNode, run) {
     const pipe = document.getElementById('pipeline');
     if (!PIPE_NODES.length && !steps.length) return;
     const nodes = steps.length ? steps : PIPE_NODES;
@@ -463,10 +463,21 @@
         ? `<div class="pipe-connector ${state === 'done' ? 'done' : (state === 'active' ? 'active' : '')}"></div>`
         : '';
 
+      // Find running agent for this stage
+      let agentLine = '';
+      if (state === 'active' && run) {
+        const runningAgent = (run.agents || []).find(a => a.status === 'running' && (a.team_id === id || a.team_id === id + '_team'));
+        if (runningAgent) {
+          const modelLabel = runningAgent.model || 'auto';
+          agentLine = `<span style="font-size:.5rem;color:#67e8f9;font-family:'JetBrains Mono',monospace;margin-top:1px;max-width:88px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(modelLabel)}</span>`;
+        }
+      }
+
       return `${connector}<div class="pipe-stage">
         <div class="pipe-node-box ${state}" title="${esc(label)}">
           <span class="pipe-icon">${icon}</span>
           <span class="pipe-label">${esc(label)}</span>
+          ${agentLine}
           <span class="pipe-status-dot"></span>
         </div>
       </div>`;
@@ -477,7 +488,7 @@
     if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
   }
 
-  /* ── Current stage card ── */
+    /* ── Current stage card ── */
   function renderNow(run) {
     if (!run) return;
     const active = (run.pipeline_steps || []).find(s => s.status === 'running');
@@ -487,10 +498,13 @@
     document.getElementById('now-stage-desc').textContent = STAGE_DESCS[stageKey] || '';
     document.getElementById('current-stage-name').textContent = `Stage: ${stageName}`;
 
-    // Agents in this stage
+    // Agents in this stage — show name + LLM
     const agents = (run.agents || []).filter(a => a.status === 'running');
-    document.getElementById('now-agents').innerHTML = agents.map(a =>
-      `<span class="now-agent-tag">${esc(a.title || a.id)}</span>`).join('');
+    document.getElementById('now-agents').innerHTML = agents.map(a => {
+      const model = a.model || 'auto';
+      const modelBadge = `<span style="font-size:.58rem;padding:.1rem .4rem;border-radius:3px;background:rgba(34,211,238,.12);color:#67e8f9;margin-left:4px;font-family:'JetBrains Mono',monospace">${esc(model)}</span>`;
+      return `<span class="now-agent-tag">${esc(a.title || a.id)}</span>${modelBadge}`;
+    }).join('');
   }
 
   /* ── Team swarm ── */
@@ -523,10 +537,14 @@
         ${list.map(a => {
           const st = a.status || 'pending';
           const cardCls = st === 'running' ? 'active' : (st !== 'pending' ? 'done' : '');
-          return `<div class="agent-card ${cardCls}">
+          const modelBadge = a.model ? `<span style="font-size:.58rem;padding:.1rem .35rem;border-radius:3px;background:rgba(34,211,238,.1);color:#67e8f9;font-family:'JetBrains Mono',monospace;margin-left:4px">${esc(a.model)}</span>` : '';
+        return `<div class="agent-card ${cardCls}">
             <div class="agent-name">${esc(a.title || a.id)}</div>
             <div class="agent-key">${esc(a.id)}</div>
-            <span class="status-pill ${spClass(st)}">${st === 'running' ? '<span class="spinner" style="width:8px;height:8px;border-width:1.5px;margin:0"></span> ' : ''}${esc(st)}</span>
+            <div style="margin-top:3px;display:flex;align-items:center;flex-wrap:wrap;gap:3px">
+              <span class="status-pill ${spClass(st)}">${st === 'running' ? '<span class="spinner" style="width:8px;height:8px;border-width:1.5px;margin:0"></span> ' : ''}${esc(st)}</span>
+              ${modelBadge}
+            </div>
           </div>`;
         }).join('') || '<div style="color:var(--dim);font-size:.7rem;padding:.2rem 0">—</div>'}
       </div>`;
@@ -554,7 +572,7 @@
     // Pipeline
     const steps = run.pipeline_steps || [];
     const activeNode = run.active_graph_node || '';
-    renderPipeline(steps, activeNode);
+    renderPipeline(steps, activeNode, run);
 
     // Progress
     const prog = run.progress || {};
