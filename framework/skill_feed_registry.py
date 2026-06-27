@@ -72,6 +72,42 @@ SKILL_FEEDS: Dict[str, Dict[str, List[str]]] = {
         "connected": [],
         "project": [],
     },
+    # ── New generic lifecycle agents ─────────────────────────────────────────
+    "org-analyst": {
+        "open_topics": [
+            "security-sharing",
+            "testing-deployment",
+            "governor-limits",
+            "flows-automation",
+        ],
+        "codebase": ["security-fls", "metadata-model", "apex-services"],
+        "connected": [],
+        "project": ["data-model-and-automation"],
+    },
+    "reverse-engineer": {
+        "open_topics": ["flows-automation", "apex-design-patterns"],
+        "codebase": [
+            "metadata-model",
+            "apex-services",
+            "lwc-catalog",
+            "flows-declarative",
+            "triggers-automation",
+        ],
+        "connected": ["confluence-index.md", "gdrive-gsheets-index.md"],
+        "project": ["00-architecture-overview", "data-model-and-automation"],
+    },
+    "pr-reviewer": {
+        "open_topics": [
+            "apex-design-patterns",
+            "security-sharing",
+            "testing-deployment",
+            "governor-limits",
+            "lwc-fundamentals",
+        ],
+        "codebase": ["apex-services", "triggers-automation", "security-fls"],
+        "connected": [],
+        "project": [],
+    },
 }
 
 

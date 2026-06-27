@@ -144,13 +144,45 @@ class FleetHandler(BaseHTTPRequestHandler):
             self._json(result)
             return
         if path == "/api/skill/sync":
-            try:
-                from skill_sync import refresh_skill_manifest
+            # SSE stream so the UI shows live progress as each step completes
+            self.send_response(200)
+            self.send_header("Content-Type", "text/event-stream")
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Transfer-Encoding", "chunked")
+            self.end_headers()
 
+            def _emit(msg: str) -> None:
+                line = f"data: {json.dumps({'msg': msg})}\n\n"
+                try:
+                    self.wfile.write(line.encode("utf-8"))
+                    self.wfile.flush()
+                except Exception:  # noqa: BLE001
+                    pass
+
+            try:
+                _emit("⏳ Starting skill-refresh …")
+                from skill_sync import refresh_skill_manifest
+                _emit("📋 Syncing skill manifest …")
                 result = refresh_skill_manifest()
-                self._json({"ok": True, **result})
+                skill_rows = result.get("skills", [])
+                for row in skill_rows:
+                    present = row.get("kb_present", 0)
+                    total = row.get("kb_links", 0)
+                    _emit(f"  ✅ {row['skill']} — {present}/{total} KB paths present")
+                _emit("📂 Writing per-skill feed docs …")
+                from skill_feed_registry import refresh_skill_open_feeds
+                feed_result = refresh_skill_open_feeds(force=False)
+                for s in feed_result.get("skills", []):
+                    topics = s.get("open_topics", 0)
+                    codebase = s.get("codebase", 0)
+                    _emit(f"  📄 {s['skill']} — {topics} open topics, {codebase} codebase feeds")
+                manifest_path = result.get("manifest_path", "")
+                _emit(f"✅ Done — manifest at {manifest_path}" if manifest_path else "✅ Skill sync complete")
+                _emit("__DONE__")
             except Exception as exc:  # noqa: BLE001
-                self._json({"ok": False, "error": str(exc)})
+                _emit(f"❌ Error: {exc}")
+                _emit("__DONE__")
             return
         self.send_error(404)
 
