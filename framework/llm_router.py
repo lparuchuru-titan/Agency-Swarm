@@ -151,17 +151,25 @@ def route_with_cursor_sdk(user_input: str) -> Optional[Tuple[str, List[str], Lis
 
 
 def route_user_input(user_input: str, run_id: Optional[str] = None) -> Tuple[str, List[str], List[str], str, str]:
-    """LLM when an API key is available; otherwise rule-based."""
-    # Try Anthropic API key first (fast LangChain path)
-    if os.environ.get("ANTHROPIC_API_KEY"):
-        return route_with_llm(user_input, run_id=run_id)
-    # Fall back to Cursor SDK LLM routing
-    cursor_result = route_with_cursor_sdk(user_input)
+    """
+    Routing priority:
+    1. Cursor SDK (dynamic prompt built from live registry) — if CURSOR_API_KEY set
+    2. Anthropic LangChain — if ANTHROPIC_API_KEY set
+    3. Fallback rules — always available, no API key needed
+    """
+    # 1. Dynamic Cursor SDK routing (registry-aware, no hardcoded patterns)
+    from intent_router import _route_with_cursor_sdk
+    cursor_result = _route_with_cursor_sdk(user_input)
     if cursor_result:
         return cursor_result
-    # Final fallback: deterministic rules
+
+    # 2. Anthropic LangChain
+    if os.environ.get("ANTHROPIC_API_KEY"):
+        return route_with_llm(user_input, run_id=run_id)
+
+    # 3. Fallback rules
     intent, pipeline, agent_ids = classify_intent(user_input)
-    return intent, pipeline, agent_ids, "**Router:** rules", "rules"
+    return intent, pipeline, agent_ids, "**Router:** fallback rules", "rules"
 
 
 def build_plan(user_input: str, intent: str, pipeline: List[str], agent_ids: List[str], router_line: str) -> str:
