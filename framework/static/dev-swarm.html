@@ -931,15 +931,38 @@
   }
 
   /* ── KB Refresh ── */
-  document.getElementById('btn-kb').onclick = async () => {
+  document.getElementById('btn-kb').onclick = () => {
     const btn = document.getElementById('btn-kb');
     btn.disabled = true; btn.textContent = '⟳ Refreshing…';
-    addLog(null, 'system', 'KB refresh started (manifest + open feeds)…', '');
-    try {
-      await fetch('/api/swarm/run', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({}) });
-      addLog(null, 'system', '✅ KB refresh queued', 'success');
-    } catch(e) { addLog(null, 'system', '❌ ' + e.message, 'error'); }
-    btn.disabled = false; btn.textContent = '⟳ KB Refresh';
+    addLog(null, 'system', '📚 Refreshing skill feeds (manifest + open docs)…', 'info');
+
+    const logBox = document.getElementById('sync-log-kb') || (() => {
+      const b = document.createElement('pre');
+      b.id = 'sync-log-kb';
+      b.style.cssText = 'background:#0b3a40;color:#dff1f2;font-size:.68rem;line-height:1.6;border-radius:8px;padding:10px 14px;margin:8px 0;max-height:180px;overflow-y:auto;white-space:pre-wrap;';
+      btn.insertAdjacentElement('afterend', b);
+      return b;
+    })();
+    logBox.textContent = '';
+
+    const es = new EventSource('/api/skill/sync');
+    es.onmessage = (ev) => {
+      let d; try { d = JSON.parse(ev.data); } catch { return; }
+      if (d.msg === '__DONE__') {
+        es.close();
+        btn.disabled = false; btn.textContent = '⟳ KB Refresh';
+        logBox.textContent += '\n✅ Done';
+        addLog(null, 'system', '✅ Skill feeds refreshed', 'success');
+        return;
+      }
+      logBox.textContent += d.msg + '\n';
+      logBox.scrollTop = logBox.scrollHeight;
+    };
+    es.onerror = () => {
+      es.close();
+      btn.disabled = false; btn.textContent = '⟳ KB Refresh';
+      addLog(null, 'system', '❌ Skill refresh failed', 'error');
+    };
   };
 
   document.getElementById('btn-run').onclick = startOrchestrator;
