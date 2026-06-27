@@ -99,12 +99,69 @@ def route_with_llm(user_input: str, run_id: Optional[str] = None) -> Tuple[str, 
         return intent, pipeline, agent_ids, f"**Router:** rules (LLM fallback: {exc})", "rules"
 
 
+def route_with_cursor_sdk(user_input: str) -> Optional[Tuple[str, List[str], List[str], str, str]]:
+    """
+    Use Cursor SDK for LLM-based routing if CURSOR_API_KEY is set.
+    Returns None on failure so the caller can fall back to rules.
+    """
+    api_key = os.environ.get("CURSOR_API_KEY", "")
+    if not api_key:
+        return None
+    try:
+        import subprocess, shutil, json as _json
+        node = shutil.which("node") or "node"
+        runner = str(Path(__file__).parent / "cursor_agent_runner.js")
+
+        routing_prompt = (
+            _ROUTER_PROMPT
+            + f"\n\nUser request:\n{user_input}\n\n"
+            "Return ONLY the JSON object, no other text."
+        )
+        result = subprocess.run(
+            [node, runner, "--api-key", api_key, "--model", "auto",
+             "--cwd", str(Path(__file__).parent),
+             "--agent-id", "router",
+             "--prompt", routing_prompt],
+            capture_output=True, text=True, timeout=30,
+        )
+        output_text = ""
+        for line in result.stdout.splitlines():
+            try:
+                ev = _json.loads(line)
+                if ev.get("type") == "text":
+                    output_text += ev.get("text", "")
+                elif ev.get("type") == "done":
+                    output_text = ev.get("result", output_text)
+            except Exception:  # noqa: BLE001
+                pass
+        match = re.search(r"\{[\s\S]*\}", output_text)
+        if not match:
+            return None
+        data = _json.loads(match.group())
+        intent = str(data.get("intent", "full_delivery"))
+        pipeline = _sanitize_pipeline(list(data.get("pipeline", [])))
+        agent_ids = _sanitize_agent_ids(list(data.get("agent_ids", [])))
+        reason = str(data.get("reason", ""))
+        if not pipeline:
+            pipeline = list(INTENT_TO_TEAMS.get(intent, INTENT_TO_TEAMS["full_delivery"]))
+        extra = f"**Router:** Cursor LLM · {reason}" if reason else "**Router:** Cursor LLM"
+        return intent, pipeline, agent_ids, extra, "llm"
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def route_user_input(user_input: str, run_id: Optional[str] = None) -> Tuple[str, List[str], List[str], str, str]:
-    """LLM when ANTHROPIC_API_KEY set; otherwise rule-based."""
+    """LLM when an API key is available; otherwise rule-based."""
+    # Try Anthropic API key first (fast LangChain path)
     if os.environ.get("ANTHROPIC_API_KEY"):
         return route_with_llm(user_input, run_id=run_id)
+    # Fall back to Cursor SDK LLM routing
+    cursor_result = route_with_cursor_sdk(user_input)
+    if cursor_result:
+        return cursor_result
+    # Final fallback: deterministic rules
     intent, pipeline, agent_ids = classify_intent(user_input)
-    return intent, pipeline, agent_ids, "**Router:** rules (no API key)", "rules"
+    return intent, pipeline, agent_ids, "**Router:** rules", "rules"
 
 
 def build_plan(user_input: str, intent: str, pipeline: List[str], agent_ids: List[str], router_line: str) -> str:

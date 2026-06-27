@@ -48,18 +48,6 @@ TEAMS: List[Dict[str, Any]] = [
         "color": "#eab308",
     },
     {
-        "id": "discover",
-        "name": "Discover & Analyse",
-        "description": "Org health, security audit, technical debt, reverse engineering, documentation from metadata",
-        "color": "#f59e0b",
-    },
-    {
-        "id": "review",
-        "name": "Code Review",
-        "description": "PR review, static analysis, APPROVE/REQUEST CHANGES/BLOCK gate before every deploy",
-        "color": "#ec4899",
-    },
-    {
         "id": "training",
         "name": "Agent Training",
         "description": "Refresh knowledge base and agent skills from swarm runs",
@@ -254,55 +242,6 @@ AGENTS: List[Dict[str, Any]] = [
         "intents": ["document", "explain", "deep dive", "html doc", "what changed"],
         "description": "HTML deep-dive docs of changes, architecture explainers",
     },
-    # --- Discover ---
-    {
-        "id": "org-analyst",
-        "name": "Org Analyst",
-        "team": "discover",
-        "role": "discover",
-        "skills": ["org-analyst"],
-        "cursor_agent": "org-analyst",
-        "intents": [
-            "audit", "health", "security", "vulnerability", "technical debt",
-            "coverage", "release readiness", "go live", "permissions", "sharing model",
-            "dead code", "org discovery", "org assessment",
-        ],
-        "kb_topics": ["sfdc/security-sharing", "sfdc/testing-deployment"],
-        "training_topics": ["org-analyst"],
-        "description": "Security audit, technical debt, health score, release readiness. Read-only.",
-    },
-    {
-        "id": "reverse-engineer",
-        "name": "Reverse Engineer",
-        "team": "discover",
-        "role": "discover",
-        "skills": ["reverse-engineer"],
-        "cursor_agent": "reverse-engineer",
-        "intents": [
-            "document org", "brd", "functional spec", "data dictionary", "erd",
-            "integration map", "automation inventory", "onboarding guide",
-            "reverse engineer", "undocumented", "what does this org do",
-        ],
-        "kb_topics": ["codebase/*", "sfdc/integration-patterns"],
-        "training_topics": ["reverse-engineer"],
-        "description": "BRD, Functional Spec, Data Dictionary, ERD, Integration Map, Onboarding Guide from metadata.",
-    },
-    # --- Review ---
-    {
-        "id": "pr-reviewer",
-        "name": "PR Reviewer",
-        "team": "review",
-        "role": "review",
-        "skills": ["pr-reviewer"],
-        "cursor_agent": "pr-reviewer",
-        "intents": [
-            "review", "pr", "code review", "ready to deploy", "approve", "block",
-            "bulkification", "fls check", "test coverage", "flow review", "diff",
-        ],
-        "kb_topics": ["sfdc/apex-design-patterns", "sfdc/security-sharing", "sfdc/testing-deployment"],
-        "training_topics": ["pr-reviewer"],
-        "description": "APPROVE/REQUEST CHANGES/BLOCK gate. Apex, LWC, Flow, Metadata checklist.",
-    },
     # --- Training ---
     {
         "id": "skill-trainer",
@@ -319,13 +258,11 @@ AGENTS: List[Dict[str, Any]] = [
 # LangGraph supervisor routing targets (graph node names)
 GRAPH_NODES: List[Dict[str, Any]] = [
     {"id": "orchestrator", "label": "Orchestrator", "phase": "Route"},
-    {"id": "discover_team", "label": "Discover", "phase": "Audit & Analyse"},
     {"id": "requirements_team", "label": "Requirements", "phase": "Gather"},
     {"id": "research_team", "label": "Research", "phase": "KB + RAG"},
     {"id": "design_team", "label": "Design", "phase": "Architect"},
     {"id": "development_team", "label": "Development", "phase": "Implement"},
     {"id": "admin_team", "label": "Admin", "phase": "Metadata"},
-    {"id": "review_team", "label": "Review", "phase": "PR Gate"},
     {"id": "qa_team", "label": "QA", "phase": "Test"},
     {"id": "documentation_team", "label": "Documentation", "phase": "Document"},
     {"id": "training_team", "label": "Training", "phase": "Train KB"},
@@ -333,33 +270,30 @@ GRAPH_NODES: List[Dict[str, Any]] = [
 ]
 
 INTENT_TO_TEAMS: Dict[str, List[str]] = {
-    # Discovery / audit — run before any implementation on an unfamiliar org
-    "discover": ["discover_team", "documentation_team"],
-    # Design only — architecture and blueprints
+    # Read-only analysis — live org scan + document findings. No dev, no QA.
+    "discover": ["research_team", "documentation_team"],
+    # PR / code review gate only. No building.
+    "review": ["review_team"],
+    # Architecture and blueprints. No building, no QA.
     "design": ["requirements_team", "research_team", "design_team"],
-    # Standard feature implementation
+    # Full feature implementation — includes dev, QA, docs.
     "implement": [
         "requirements_team",
         "research_team",
-        "design_team",
         "development_team",
         "admin_team",
-        "review_team",
         "qa_team",
         "documentation_team",
         "training_team",
     ],
-    # Jira-only work
+    # Jira requirements only. No building, no QA.
     "jira_only": ["requirements_team", "documentation_team"],
-    # PR / code review gate only
-    "review": ["review_team"],
-    # Testing only
+    # QA/test only.
     "test": ["qa_team", "documentation_team"],
-    # Documentation only
+    # Documentation / explanation only. No building, no QA.
     "document": ["documentation_team"],
-    # Full lifecycle: discover → design → build → review → test → promote
+    # Full lifecycle.
     "full_delivery": [
-        "discover_team",
         "requirements_team",
         "research_team",
         "design_team",

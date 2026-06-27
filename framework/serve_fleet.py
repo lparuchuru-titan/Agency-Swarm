@@ -256,6 +256,92 @@ class FleetHandler(BaseHTTPRequestHandler):
         if path in ("/", "/index.html", "/swarm-fleet.html", "/dev-swarm.html"):
             self._file(STATIC / "dev-swarm.html", "text/html; charset=utf-8")
             return
+
+        # ── Serve docs/ directory ──────────────────────────────────────────
+        if path.startswith("/docs/"):
+            from config import REPO_ROOT as _REPO_ROOT
+            rel = path[6:]
+            file_path = _REPO_ROOT / "docs" / rel
+            if file_path.is_file():
+                ext = file_path.suffix.lower()
+                ct = "text/html; charset=utf-8" if ext == ".html" else \
+                     "text/markdown; charset=utf-8" if ext in (".md", ".markdown") else \
+                     "application/octet-stream"
+                self._file(file_path, ct)
+            else:
+                self.send_error(404, f"Not found: {rel}")
+            return
+
+        # ── Run artifacts (HTML/MD files created during a run) ─────────────
+        if path == "/api/run-artifacts":
+            from config import REPO_ROOT as _REPO_ROOT
+            docs_dir = _REPO_ROOT / "docs"
+            artifacts = []
+            try:
+                for fp in sorted(docs_dir.rglob("*.html"),
+                                 key=lambda p: p.stat().st_mtime, reverse=True)[:20]:
+                    rel_docs = str(fp.relative_to(docs_dir))
+                    artifacts.append({
+                        "name": fp.name,
+                        "path": str(fp.relative_to(_REPO_ROOT)),
+                        "url": "/docs/" + rel_docs,
+                        "ext": fp.suffix,
+                        "mtime": fp.stat().st_mtime,
+                    })
+            except Exception:  # noqa: BLE001
+                pass
+            self._json({"artifacts": artifacts})
+            return
+
+        # ── Latest run plan / agent assignments ────────────────────────────
+        if path == "/api/run-plan":
+            from config import FLEET_DIR as _FLEET_DIR
+            state_path = _FLEET_DIR / "state.json"
+            if not state_path.exists():
+                self._json({"ok": False})
+                return
+            try:
+                runs = json.loads(state_path.read_text(encoding="utf-8")).get("runs", [])
+                run = runs[-1] if runs else {}
+                run_id = run.get("run_id", "")
+                plan_text = ""
+                if run_id:
+                    plan_path = _FLEET_DIR / "runs" / run_id / "PLAN.md"
+                    if plan_path.exists():
+                        plan_text = plan_path.read_text(encoding="utf-8")
+                self._json({
+                    "run_id": run_id,
+                    "intent": run.get("intent", ""),
+                    "router_method": run.get("router_method", ""),
+                    "pipeline": run.get("pipeline", []),
+                    "agents": run.get("agents", []),
+                    "plan_text": plan_text,
+                    "status": run.get("status", ""),
+                })
+            except Exception as exc:  # noqa: BLE001
+                self._json({"ok": False, "error": str(exc)})
+            return
+
+        # ── Run usage (token counts + cost) ────────────────────────────────
+        if path == "/api/run-usage":
+            from config import FLEET_DIR as _FLEET_DIR
+            run_dirs = sorted((_FLEET_DIR / "runs").glob("*/USAGE.json"),
+                              key=lambda p: p.stat().st_mtime, reverse=True)
+            if run_dirs:
+                try:
+                    self._json(json.loads(run_dirs[0].read_text(encoding="utf-8")))
+                except Exception as exc:  # noqa: BLE001
+                    self._json({"error": str(exc)})
+            else:
+                self._json({"agents": [], "totals": {}})
+            return
+
+        # ── Cursor API key status ───────────────────────────────────────────
+        if path == "/api/cursor-key-status":
+            import os as _os
+            self._json({"has_key": bool(_os.environ.get("CURSOR_API_KEY", ""))})
+            return
+
         self.send_error(404)
 
     def do_POST(self) -> None:
@@ -291,19 +377,6 @@ class FleetHandler(BaseHTTPRequestHandler):
 
             result = start_orchestrator_background(user_input)
             self._json(result)
-            return
-        if path.startswith("/docs/"):
-            from config import REPO_ROOT
-            rel = path[6:]
-            file_path = REPO_ROOT / "docs" / rel
-            if file_path.is_file():
-                ext = file_path.suffix.lower()
-                ct = "text/html; charset=utf-8" if ext == ".html" else \
-                     "text/markdown; charset=utf-8" if ext in (".md",".markdown") else \
-                     "application/octet-stream"
-                self._file(file_path, ct)
-            else:
-                self.send_error(404, f"Not found: {rel}")
             return
         if path == "/api/run-artifacts":
             from config import REPO_ROOT, FLEET_DIR
