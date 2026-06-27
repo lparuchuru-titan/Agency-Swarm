@@ -25,6 +25,7 @@ FLEET_RUNS = FLEET_DIR / "runs"
 _NODE = shutil.which("node") or "node"
 _RUNNER = str(Path(__file__).parent / "cursor_agent_runner.js")
 _MODEL = os.environ.get("CURSOR_AGENT_MODEL", "auto")
+_SF = shutil.which("sf") or "sf"
 
 
 # ── helpers ────────────────────────────────────────────────────────────────
@@ -76,6 +77,118 @@ def _read_kb(topics: List[str], max_chars: int = 4000) -> str:
                 chunks.append(f"### {key}\n{path.read_text(encoding='utf-8')[:1500]}")
                 break
     return "\n\n".join(chunks)[:max_chars]
+
+
+def _soql(org: str, query: str, label: str = "") -> str:
+    """Run a SOQL query and return formatted results as a markdown table snippet."""
+    try:
+        r = subprocess.run(
+            [_SF, "data", "query", "--query", query, "--target-org", org, "--json"],
+            capture_output=True, text=True, timeout=20,
+        )
+        data = json.loads(r.stdout or "{}")
+        records = data.get("result", {}).get("records", [])
+        if not records:
+            return f"_{label}: no records found_"
+        # Format first 30 records as a simple list
+        lines = [f"**{label}** ({len(records)} records):"]
+        for rec in records[:30]:
+            # Pick the most informative fields
+            parts = []
+            for k, v in rec.items():
+                if k.startswith("attributes"):
+                    continue
+                if v and str(v) not in ("None", "null", "false", "0"):
+                    parts.append(f"{k}={v}")
+            lines.append("  - " + "  |  ".join(parts[:6]))
+        return "\n".join(lines)
+    except Exception as exc:  # noqa: BLE001
+        return f"_{label}: query failed — {exc}_"
+
+
+# Domain → SOQL queries to run before the agent
+_DOMAIN_QUERIES: Dict[str, List[Dict[str, str]]] = {
+    "cpq": [
+        {"label": "CPQ Products (active)", "q": "SELECT ProductCode, Name, SBQQ__ConfigurationType__c, SBQQ__ChargeType__c FROM Product2 WHERE IsActive = true AND ProductCode != null ORDER BY ProductCode LIMIT 50"},
+        {"label": "CPQ Price Rules (active)", "q": "SELECT Name, SBQQ__Active__c, SBQQ__EvaluationEvent__c, SBQQ__EvaluationOrder__c FROM SBQQ__PriceRule__c WHERE SBQQ__Active__c = true ORDER BY SBQQ__EvaluationOrder__c LIMIT 30"},
+        {"label": "CPQ Product Features", "q": "SELECT Name, SBQQ__ConfiguredSKU__r.ProductCode, SBQQ__MinOptionCount__c, SBQQ__MaxOptionCount__c FROM SBQQ__ProductFeature__c ORDER BY Name LIMIT 30"},
+        {"label": "CPQ Summary Variables", "q": "SELECT Name, SBQQ__AggregateFunction__c, SBQQ__TargetObject__c FROM SBQQ__SummaryVariable__c ORDER BY Name LIMIT 20"},
+        {"label": "CustomScript (QCP)", "q": "SELECT Name, SBQQ__QuoteFields__c, SBQQ__QuoteLineFields__c FROM SBQQ__CustomScript__c LIMIT 5"},
+    ],
+    "billing": [
+        {"label": "Billing Rules", "q": "SELECT Name, blng__Active__c, blng__BillingDayOfMonth__c, blng__InitialBillingDayOfMonth__c FROM blng__BillingRule__c WHERE blng__Active__c = true LIMIT 20"},
+        {"label": "Revenue Recognition Rules", "q": "SELECT Name, blng__Active__c, blng__RecognitionMethod__c FROM blng__RevenueRecognitionRule__c WHERE blng__Active__c = true LIMIT 20"},
+        {"label": "Tax Rules", "q": "SELECT Name, blng__Active__c FROM blng__TaxRule__c WHERE blng__Active__c = true LIMIT 10"},
+        {"label": "Finance Books", "q": "SELECT Name, blng__Status__c FROM blng__FinanceBook__c LIMIT 10"},
+        {"label": "Recent Invoices", "q": "SELECT Name, blng__Account__r.Name, blng__Status__c, blng__InvoiceDate__c, blng__TotalAmount__c FROM blng__Invoice__c ORDER BY CreatedDate DESC LIMIT 10"},
+    ],
+    "apex": [
+        {"label": "Apex Classes (custom, by size)", "q": "SELECT Name, ApiVersion, LengthWithoutComments FROM ApexClass WHERE NamespacePrefix = null ORDER BY LengthWithoutComments DESC LIMIT 40"},
+        {"label": "Apex Triggers", "q": "SELECT Name, TableEnumOrId, Status FROM ApexTrigger WHERE NamespacePrefix = null ORDER BY Name LIMIT 30"},
+        {"label": "Test Coverage (lowest)", "q": "SELECT ApexClassOrTrigger.Name, NumLinesCovered, NumLinesUncovered FROM ApexCodeCoverageAggregate ORDER BY NumLinesCovered ASC LIMIT 20"},
+    ],
+    "lwc": [
+        {"label": "LWC Components", "q": "SELECT DeveloperName, MasterLabel FROM LightningComponentBundle ORDER BY DeveloperName LIMIT 60"},
+        {"label": "Aura Bundles", "q": "SELECT DeveloperName FROM AuraDefinitionBundle ORDER BY DeveloperName LIMIT 30"},
+    ],
+    "flow": [
+        {"label": "Active Flows", "q": "SELECT MasterLabel, ProcessType, TriggerType, ApiVersion FROM Flow WHERE Status = 'Active' ORDER BY MasterLabel LIMIT 40"},
+    ],
+    "objects": [
+        {"label": "Custom Objects", "q": "SELECT Label, QualifiedApiName, KeyPrefix FROM EntityDefinition WHERE IsCustomizable = true AND QualifiedApiName LIKE '%__c' ORDER BY QualifiedApiName LIMIT 60"},
+    ],
+    "security": [
+        {"label": "Permission Sets (custom)", "q": "SELECT Name, Label FROM PermissionSet WHERE IsOwnedByProfile = false AND NamespacePrefix = null ORDER BY Name LIMIT 30"},
+        {"label": "Profiles with ModifyAll", "q": "SELECT Name FROM Profile WHERE PermissionsModifyAllData = true ORDER BY Name LIMIT 10"},
+    ],
+}
+
+_KEYWORD_MAP = {
+    "cpq": ["cpq", "quote", "quoting", "bundle", "product", "price", "sbqq", "pantheon", "discount"],
+    "billing": ["billing", "invoice", "revenue", "blng", "tax", "payment", "finance", "order"],
+    "apex": ["apex", "trigger", "class", "code", "coverage", "test"],
+    "lwc": ["lwc", "lightning", "component", "aura", "ui", "frontend"],
+    "flow": ["flow", "automation", "declarative", "process"],
+    "objects": ["object", "field", "schema", "data model", "metadata"],
+    "security": ["security", "permission", "profile", "sharing", "fls", "access"],
+}
+
+
+def _live_org_context(user_input: str, org: str, run_id: str, agent_id: str) -> str:
+    """
+    Detect which domains the request touches, run relevant SOQL,
+    and return formatted org context for injection into the agent prompt.
+    """
+    text = user_input.lower()
+
+    # Detect relevant domains
+    domains: List[str] = []
+    for domain, keywords in _KEYWORD_MAP.items():
+        if any(kw in text for kw in keywords):
+            domains.append(domain)
+
+    # Default to broad scan if no specific domain detected
+    if not domains:
+        domains = ["apex", "objects", "flow"]
+
+    if not org:
+        return "_No org configured — run `sfdc-swarm context` to set target org._"
+
+    append_activity(run_id, agent_id, f"🔍 Querying {org} — domains: {', '.join(domains)}")
+
+    sections: List[str] = []
+    sections.append(f"## Live org data from {org}")
+
+    for domain in domains:
+        queries = _DOMAIN_QUERIES.get(domain, [])
+        for q in queries:
+            result = _soql(org, q["q"], q["label"])
+            sections.append(result)
+            # Brief activity update
+            first_line = result.split("\n")[0][:120]
+            append_activity(run_id, agent_id, f"  {first_line}")
+
+    return "\n\n".join(sections)
 
 
 def _read_prior_artifacts(run_id: str, names: List[str], max_chars: int = 4000) -> str:
@@ -203,51 +316,55 @@ Produce:
 
 def run_research_team(state: Dict[str, Any]) -> Dict[str, Any]:
     run_id = state["run_id"]
-    mark_team_phase(run_id, "research", "KB + codebase research", "research_team")
+    mark_team_phase(run_id, "research", "KB + live org research", "research_team")
     agent_id = "kb-researcher"
     update_agent(run_id, agent_id, {"status": "running", "started_at": _now(), "team_id": "research"})
-    append_activity(run_id, agent_id, "Researching Salesforce patterns and KB…")
     ctx = get_runtime()
+    org = ctx.get("targetOrgAlias", "")
+
+    # Step 1: query the live org
+    append_activity(run_id, agent_id, f"Querying live org: {org}")
+    org_data = _live_org_context(state["user_input"], org, run_id, agent_id)
 
     skill = _read_skill("codebase-explainer")
-    kb_ctx = _read_kb(["apex-design-patterns", "security-sharing", "well-architected", "integration-patterns"])
 
     conn_parts: List[str] = []
     conn = KB_DIR / "connected"
     if conn.is_dir():
         for p in sorted(conn.glob("*.md")):
             if p.name != "INDEX.md":
-                conn_parts.append(f"### {p.name}\n{p.read_text(encoding='utf-8')[:1500]}")
-    connected_ctx = "\n\n".join(conn_parts)[:3000] or "No connected indexes — run skill-refresh --tier weekly."
+                conn_parts.append(f"### {p.name}\n{p.read_text(encoding='utf-8')[:1000]}")
+    connected_ctx = "\n\n".join(conn_parts)[:2000] or ""
 
-    prompt = f"""You are a Salesforce research specialist.
-Project: {ctx.get('projectName','—')} · Org: {ctx.get('targetOrgAlias','—')}
+    prompt = f"""You are a Salesforce analyst with live access to org data.
+Project: {ctx.get('projectName','—')} · Org: {org}
 
 {skill}
 
 ---
 
-TASK: Research what's needed to implement this request.
+TASK: Analyze this request using the REAL org data below.
 
 REQUEST: {state['user_input']}
 
-Relevant knowledge base:
-{kb_ctx}
+=== LIVE ORG DATA (queried right now from {org}) ===
+{org_data}
+=== END ORG DATA ===
 
-Connected sources (Jira / Confluence / Drive):
-{connected_ctx}
+{"Connected indexes:\\n" + connected_ctx if connected_ctx else ""}
 
-Produce a research brief:
-1. **Salesforce platform capabilities** — what standard features cover this (no custom code needed)
-2. **Custom work required** — what Apex, LWC, Flow, or metadata must be built
-3. **Key patterns to use** — trigger handler, service layer, CPQ rules, LWC @wire pattern, etc.
-4. **Risks & governor limits** — what could break at scale
-5. **Implementation sequence** — in what order to do the work
-6. **Verification queries** — SOQL to confirm it worked"""
+Based on the ACTUAL data above, produce:
+1. **What exists in this org** — specific components, classes, objects found (cite actual names from the data)
+2. **How it works** — explain the actual implementation based on what you see
+3. **Key components** — list the most important pieces with their purpose
+4. **Gaps or issues** — anything missing, stale, or risky you see in the data
+5. **Recommendations** — specific, actionable next steps based on what's actually there
+
+Be specific. Reference actual class names, object names, and record counts from the org data."""
 
     output = _invoke_cursor_agent(run_id, agent_id, prompt)
     path = _write_artifact(run_id, "RESEARCH.md",
-        f"# Research Brief\n\n**Request:** {state['user_input']}\n\n{output}")
+        f"# Live Org Research\n\n**Request:** {state['user_input']}\n**Org:** {org}\n\n{output}")
     update_agent(run_id, agent_id, {"status": "done", "ended_at": _now(), "summary": path, "note_path": path})
     return {"phase": "research_done", "delivery_path": path,
             "artifacts": [{"agent": agent_id, "artifact": path}]}
@@ -458,32 +575,45 @@ def run_documentation_team(state: Dict[str, Any]) -> Dict[str, Any]:
 
     for agent in _agents_for_team_ids("documentation", state.get("assigned_agents", [])):
         update_agent(run_id, agent["id"], {"status": "running", "started_at": _now(), "team_id": "documentation"})
-        append_activity(run_id, agent["id"], "Writing delivery summary…")
+        append_activity(run_id, agent["id"], "Writing documentation from live org data…")
 
         skill = _read_skill("codebase-explainer")
+        org = ctx.get("targetOrgAlias", "")
 
-        prompt = f"""You are a Salesforce technical writer.
-Project: {ctx.get('projectName','—')} · Org: {ctx.get('targetOrgAlias','—')}
+        # If no prior agents ran, query the org now (documentation-only request)
+        if not artifact_content:
+            append_activity(run_id, agent["id"], f"No prior analysis — querying org: {org}")
+            org_data = _live_org_context(state["user_input"], org, run_id, agent["id"])
+        else:
+            org_data = ""
+
+        prompt = f"""You are a Salesforce technical documentation specialist.
+Project: {ctx.get('projectName','—')} · Org: {org}
 
 {skill}
 
 ---
 
-TASK: Write a concise delivery summary for this completed work.
+TASK: Produce comprehensive documentation based on REAL org data and analysis.
 
-ORIGINAL REQUEST: {state['user_input']}
+REQUEST: {state['user_input']}
 
-Agent outputs produced:
-{artifact_content[:5000] or 'No agent output available.'}
+{"=== LIVE ORG DATA ===" + chr(10) + org_data + chr(10) + "=== END ===" if org_data else ""}
 
-Write a delivery document covering:
-1. **What was done** — 2-3 sentences summary
-2. **Files created/changed** — list of artifacts
-3. **How to deploy** — quick step-by-step (retrieve → deploy command → verify)
-4. **How to test** — quick smoke test steps
-5. **Notes** — any caveats, manual steps, or follow-up required
+Prior agent analysis:
+{artifact_content[:5000] or 'No prior analysis available.'}
 
-Keep it to 1 page. This is what the developer reads to know what to do next."""
+Produce detailed documentation:
+1. **Overview** — what this functionality does in this org (2-3 paragraphs)
+2. **Architecture** — how the components connect (describe the actual components found)
+3. **Key components** — table with: Component Name | Type | Purpose | Key Logic
+4. **Data model** — objects involved and how they relate
+5. **Integration points** — external systems, APIs, or package boundaries
+6. **Configuration** — key settings, custom metadata, picklist values
+7. **Known patterns** — recurring design patterns seen in the code
+8. **Limitations & risks** — technical debt, gaps, or risks identified
+
+Base every section on ACTUAL component names and data from the org. No generic advice."""
 
         output = _invoke_cursor_agent(run_id, agent["id"], prompt)
 
