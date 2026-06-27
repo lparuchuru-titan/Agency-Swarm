@@ -79,6 +79,35 @@ def _read_kb(topics: List[str], max_chars: int = 4000) -> str:
     return "\n\n".join(chunks)[:max_chars]
 
 
+def _accumulate_usage(run_id: str, agent_id: str, usage: Dict[str, Any], cost_usd: float) -> None:
+    """Add agent usage to the run-level totals file."""
+    totals_path = _run_dir(run_id) / "USAGE.json"
+    try:
+        data = json.loads(totals_path.read_text(encoding="utf-8")) if totals_path.exists() else {"agents": [], "totals": {}}
+    except Exception:  # noqa: BLE001
+        data = {"agents": [], "totals": {}}
+
+    data["agents"].append({
+        "agent_id": agent_id,
+        "input_tokens": usage.get("input_tokens", 0),
+        "output_tokens": usage.get("output_tokens", 0),
+        "cache_read_tokens": usage.get("cache_read_tokens", 0),
+        "total_tokens": usage.get("total_tokens", 0),
+        "cost_usd": round(cost_usd, 6),
+    })
+    # Recompute totals
+    t = {
+        "input_tokens": sum(a["input_tokens"] for a in data["agents"]),
+        "output_tokens": sum(a["output_tokens"] for a in data["agents"]),
+        "cache_read_tokens": sum(a["cache_read_tokens"] for a in data["agents"]),
+        "total_tokens": sum(a["total_tokens"] for a in data["agents"]),
+        "cost_usd": round(sum(a["cost_usd"] for a in data["agents"]), 6),
+        "agent_count": len(data["agents"]),
+    }
+    data["totals"] = t
+    totals_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+
+
 def _soql(org: str, query: str, label: str = "") -> str:
     """Run a SOQL query and return formatted results as a markdown table snippet."""
     try:
@@ -269,8 +298,31 @@ def _invoke_cursor_agent(
                 elif ev_type == "done":
                     output_text = ev.get("result", output_text)
                     model_done = ev.get("model", "")
+                    usage = ev.get("usage", {})
+                    duration_ms = ev.get("duration_ms", 0)
                     if model_done:
                         update_agent(run_id, agent_id, {"model": model_done})
+                    if usage:
+                        total = usage.get("total_tokens", 0)
+                        inp   = usage.get("input_tokens", 0)
+                        out   = usage.get("output_tokens", 0)
+                        cache = usage.get("cache_read_tokens", 0)
+                        # Estimate cost: ~$3/M input, ~$15/M output (rough Cursor estimate)
+                        cost_usd = (inp / 1_000_000 * 3.0) + (out / 1_000_000 * 15.0)
+                        dur_s = duration_ms / 1000
+                        summary = (
+                            f"✅ {total:,} tokens "
+                            f"({inp:,} in · {out:,} out · {cache:,} cache) "
+                            f"≈ ${cost_usd:.4f} · {dur_s:.1f}s"
+                        )
+                        append_activity(run_id, agent_id, summary)
+                        update_agent(run_id, agent_id, {
+                            "usage": usage,
+                            "cost_usd": round(cost_usd, 6),
+                            "duration_ms": duration_ms,
+                        })
+                        # Accumulate run-level totals
+                        _accumulate_usage(run_id, agent_id, usage, cost_usd)
 
                 elif ev_type == "error":
                     append_activity(run_id, agent_id, "❌ " + ev.get("text", ""))

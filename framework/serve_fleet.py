@@ -292,6 +292,20 @@ class FleetHandler(BaseHTTPRequestHandler):
             result = start_orchestrator_background(user_input)
             self._json(result)
             return
+        if path == "/api/run-usage":
+            # Return usage for the most recent run
+            import glob as _glob
+            from config import FLEET_DIR
+            run_dirs = sorted((FLEET_DIR / "runs").glob("*/USAGE.json"),
+                              key=lambda p: p.stat().st_mtime, reverse=True)
+            if run_dirs:
+                try:
+                    self._json(json.loads(run_dirs[0].read_text(encoding="utf-8")))
+                except Exception as exc:  # noqa: BLE001
+                    self._json({"error": str(exc)})
+            else:
+                self._json({"agents": [], "totals": {}})
+            return
         if path == "/api/cursor-key":
             # POST to set CURSOR_API_KEY for this session
             length = int(self.headers.get("Content-Length", 0))

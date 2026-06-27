@@ -353,8 +353,17 @@
       </div>
     </div>
 
-    <!-- Team swarm grid -->
-    <div class="team-grid" id="team-grid" style="display:none"></div>
+      <!-- Usage panel -->
+      <div class="now-card" id="usage-panel" style="display:none;margin-bottom:1.25rem">
+        <div class="card-title" style="margin-bottom:.65rem;display:flex;justify-content:space-between;align-items:center">
+          <span>Token usage &amp; cost</span>
+          <span id="usage-total-badge" style="font-size:.72rem;font-family:'JetBrains Mono',monospace;color:var(--amber)"></span>
+        </div>
+        <div id="usage-agent-list" style="font-size:.72rem"></div>
+      </div>
+
+      <!-- Team swarm grid -->
+      <div class="team-grid" id="team-grid" style="display:none"></div>
   </div>
 </div>
 
@@ -624,6 +633,52 @@
     }
   }
 
+  /* ── Usage panel ── */
+  function renderUsage(data) {
+    if (!data || !data.agents || data.agents.length === 0) return;
+    const panel = document.getElementById('usage-panel');
+    panel.style.display = 'block';
+    const t = data.totals || {};
+    const totalTokens = (t.total_tokens || 0).toLocaleString();
+    const totalCost = (t.cost_usd || 0).toFixed(4);
+    document.getElementById('usage-total-badge').textContent =
+      `${totalTokens} tokens · $${totalCost} est.`;
+
+    document.getElementById('usage-agent-list').innerHTML = `
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr style="color:var(--dim);font-size:.62rem;text-transform:uppercase;letter-spacing:.04em">
+          <th style="text-align:left;padding:.35rem .4rem;border-bottom:1px solid var(--border)">Agent</th>
+          <th style="text-align:right;padding:.35rem .4rem;border-bottom:1px solid var(--border)">Input</th>
+          <th style="text-align:right;padding:.35rem .4rem;border-bottom:1px solid var(--border)">Output</th>
+          <th style="text-align:right;padding:.35rem .4rem;border-bottom:1px solid var(--border)">Cache</th>
+          <th style="text-align:right;padding:.35rem .4rem;border-bottom:1px solid var(--border)">Total</th>
+          <th style="text-align:right;padding:.35rem .4rem;border-bottom:1px solid var(--border)">Cost est.</th>
+        </tr></thead>
+        <tbody>
+        ${data.agents.map(a => `
+          <tr style="border-bottom:1px solid var(--border);font-size:.7rem">
+            <td style="padding:.3rem .4rem;font-family:'JetBrains Mono',monospace;color:var(--muted)">${esc(a.agent_id)}</td>
+            <td style="text-align:right;padding:.3rem .4rem;color:var(--text)">${(a.input_tokens||0).toLocaleString()}</td>
+            <td style="text-align:right;padding:.3rem .4rem;color:var(--green)">${(a.output_tokens||0).toLocaleString()}</td>
+            <td style="text-align:right;padding:.3rem .4rem;color:var(--dim)">${(a.cache_read_tokens||0).toLocaleString()}</td>
+            <td style="text-align:right;padding:.3rem .4rem;font-weight:600">${(a.total_tokens||0).toLocaleString()}</td>
+            <td style="text-align:right;padding:.3rem .4rem;color:var(--amber);font-family:'JetBrains Mono',monospace">$${(a.cost_usd||0).toFixed(4)}</td>
+          </tr>`).join('')}
+        <tr style="font-weight:700;font-size:.72rem">
+          <td style="padding:.4rem;color:var(--text)">TOTAL</td>
+          <td style="text-align:right;padding:.4rem">${(t.input_tokens||0).toLocaleString()}</td>
+          <td style="text-align:right;padding:.4rem;color:var(--green)">${(t.output_tokens||0).toLocaleString()}</td>
+          <td style="text-align:right;padding:.4rem;color:var(--dim)">${(t.cache_read_tokens||0).toLocaleString()}</td>
+          <td style="text-align:right;padding:.4rem">${(t.total_tokens||0).toLocaleString()}</td>
+          <td style="text-align:right;padding:.4rem;color:var(--amber);font-family:'JetBrains Mono',monospace">$${(t.cost_usd||0).toFixed(4)}</td>
+        </tr>
+        </tbody>
+      </table>
+      <div style="font-size:.62rem;color:var(--dim);margin-top:.5rem">
+        * Cost estimate: ~$3/M input tokens, ~$15/M output tokens. Actual Cursor billing may differ.
+      </div>`;
+  }
+
   /* ── Poll ── */
   async function refresh() {
     try {
@@ -652,6 +707,14 @@
       const run = (data.runs || []).find(r => r.status === 'running') || data.active_run || (data.runs || [])[0];
       if (run) renderRun(run, status);
       if (status.last_error && !running) document.getElementById('btn-msg').textContent = 'Error: ' + status.last_error;
+
+      // Refresh usage panel
+      try {
+        const ur = await fetch('/api/run-usage');
+        const ud = await ur.json();
+        renderUsage(ud);
+      } catch(e2) {}
+
     } catch (e) { console.warn(e); }
     setTimeout(refresh, pollMs);
   }

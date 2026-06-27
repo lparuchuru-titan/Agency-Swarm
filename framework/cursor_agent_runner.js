@@ -101,7 +101,25 @@ async function main() {
       agent.close();
     }
 
-    emit({ type: "done", status, result, model: resolvedModel });
+    // Capture usage + model from final result
+    const usage = final?.usage || {};
+    const resolvedFinalModel = final?.model?.id || resolvedModel;
+    const durationMs = final?.durationMs || 0;
+
+    emit({
+      type: "done",
+      status,
+      result,
+      model: resolvedFinalModel,
+      usage: {
+        input_tokens:       usage.inputTokens       || 0,
+        output_tokens:      usage.outputTokens      || 0,
+        cache_read_tokens:  usage.cacheReadTokens   || 0,
+        cache_write_tokens: usage.cacheWriteTokens  || 0,
+        total_tokens:       usage.totalTokens       || 0,
+      },
+      duration_ms: durationMs,
+    });
 
   } catch (err) {
     emit({ type: "error", text: err.message || String(err) });
