@@ -101,6 +101,104 @@ class FleetHandler(BaseHTTPRequestHandler):
 
             self._json(cursor_fleet_snapshot())
             return
+        if path == "/api/org-scan":
+            # SSE stream — live SOQL scan of the connected org (no files written)
+            self.send_response(200)
+            self.send_header("Content-Type", "text/event-stream")
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Transfer-Encoding", "chunked")
+            self.end_headers()
+
+            def _emit(data: dict) -> None:
+                try:
+                    self.wfile.write(f"data: {json.dumps(data)}\n\n".encode("utf-8"))
+                    self.wfile.flush()
+                except Exception:  # noqa: BLE001
+                    pass
+
+            import subprocess, shutil
+
+            def _soql(alias: str, query: str) -> list:
+                if not shutil.which("sf"):
+                    return []
+                try:
+                    r = subprocess.run(
+                        ["sf", "data", "query", "--query", query,
+                         "--target-org", alias, "--json"],
+                        capture_output=True, text=True, timeout=20
+                    )
+                    data = json.loads(r.stdout or "{}")
+                    return data.get("result", {}).get("records", [])
+                except Exception:  # noqa: BLE001
+                    return []
+
+            try:
+                from config import get_runtime, target_org_alias
+                ctx = get_runtime()
+                org = target_org_alias() or ctx.get("targetOrgAlias", "")
+                if not org:
+                    _emit({"team": "system", "status": "error",
+                           "msg": "No org connected — run: sf org login web"})
+                    _emit({"done": True})
+                    return
+
+                _emit({"team": "system", "status": "start",
+                       "msg": f"Connected org: {org}", "org": org})
+
+                # ── UI/UX team ────────────────────────────────────────────
+                _emit({"team": "UI/UX", "status": "running", "msg": "Scanning LWC components…"})
+                lwc = _soql(org, "SELECT DeveloperName, MasterLabel FROM LightningComponentBundle ORDER BY DeveloperName LIMIT 200")
+                _emit({"team": "UI/UX", "status": "done",
+                       "msg": f"LWC: {len(lwc)} components",
+                       "items": [r.get("DeveloperName","") for r in lwc]})
+
+                _emit({"team": "UI/UX", "status": "running", "msg": "Scanning Aura bundles…"})
+                aura = _soql(org, "SELECT DeveloperName FROM AuraDefinitionBundle ORDER BY DeveloperName LIMIT 100")
+                _emit({"team": "UI/UX", "status": "done",
+                       "msg": f"Aura: {len(aura)} bundles",
+                       "items": [r.get("DeveloperName","") for r in aura]})
+
+                # ── SF Dev team ────────────────────────────────────────────
+                _emit({"team": "SF Dev", "status": "running", "msg": "Scanning Apex classes…"})
+                apex = _soql(org, "SELECT Name, Status, ApiVersion, LengthWithoutComments FROM ApexClass WHERE NamespacePrefix = null ORDER BY LengthWithoutComments DESC LIMIT 200")
+                _emit({"team": "SF Dev", "status": "done",
+                       "msg": f"Apex: {len(apex)} classes",
+                       "items": [r.get("Name","") for r in apex]})
+
+                _emit({"team": "SF Dev", "status": "running", "msg": "Scanning triggers…"})
+                triggers = _soql(org, "SELECT Name, TableEnumOrId, Status FROM ApexTrigger WHERE NamespacePrefix = null ORDER BY Name")
+                _emit({"team": "SF Dev", "status": "done",
+                       "msg": f"Triggers: {len(triggers)}",
+                       "items": [f"{r.get('Name','')} ({r.get('TableEnumOrId','')})" for r in triggers]})
+
+                # ── Admin team ─────────────────────────────────────────────
+                _emit({"team": "Admin", "status": "running", "msg": "Scanning custom objects…"})
+                objs = _soql(org, "SELECT Label, QualifiedApiName FROM EntityDefinition WHERE IsCustomizable = true AND QualifiedApiName LIKE '%__c' ORDER BY QualifiedApiName LIMIT 200")
+                _emit({"team": "Admin", "status": "done",
+                       "msg": f"Custom objects: {len(objs)}",
+                       "items": [r.get("QualifiedApiName","") for r in objs]})
+
+                _emit({"team": "Admin", "status": "running", "msg": "Scanning active flows…"})
+                flows = _soql(org, "SELECT MasterLabel, ProcessType, TriggerType FROM Flow WHERE Status = 'Active' ORDER BY MasterLabel LIMIT 100")
+                _emit({"team": "Admin", "status": "done",
+                       "msg": f"Active flows: {len(flows)}",
+                       "items": [r.get("MasterLabel","") for r in flows]})
+
+                _emit({"team": "Admin", "status": "running", "msg": "Scanning permission sets…"})
+                permsets = _soql(org, "SELECT Name, Label FROM PermissionSet WHERE IsOwnedByProfile = false AND NamespacePrefix = null ORDER BY Name LIMIT 100")
+                _emit({"team": "Admin", "status": "done",
+                       "msg": f"Permission sets: {len(permsets)}",
+                       "items": [r.get("Name","") for r in permsets]})
+
+                _emit({"team": "system", "status": "complete",
+                       "msg": f"Org scan complete — {len(lwc)} LWC · {len(apex)} Apex · {len(objs)} objects · {len(flows)} flows"})
+            except Exception as exc:  # noqa: BLE001
+                _emit({"team": "system", "status": "error", "msg": str(exc)})
+            finally:
+                _emit({"done": True})
+            return
+
         if path == "/api/skill/sync":
             # SSE stream — EventSource uses GET; emits live progress lines
             self.send_response(200)

@@ -86,10 +86,21 @@
         </div>
         <div style="display:flex;gap:.5rem;align-items:center">
           <span class="badge" id="live-badge">idle</span>
-          <button class="btn" id="btn-refresh-manifest" type="button">Sync skill feeds</button>
+          <button class="btn" id="btn-scan-org" type="button">🔍 Scan Connected Org</button>
+          <button class="btn" id="btn-refresh-manifest" type="button">🔄 Sync Skill Feeds</button>
         </div>
       </div>
       <div class="stats" id="stats"></div>
+
+      <!-- Live Org Scan panel (hidden until triggered) -->
+      <div class="card" id="org-scan-panel" style="display:none;border:1px solid rgba(6,182,212,.3)">
+        <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+          <span>🔍 Live Org Scan — <span id="scan-org-name">…</span></span>
+          <span id="scan-summary" class="msg"></span>
+        </div>
+        <div id="scan-teams" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-top:.5rem"></div>
+        <pre id="scan-log" style="background:#0a0a14;color:#67e8f9;font-size:.7rem;line-height:1.6;border-radius:8px;padding:10px 14px;margin-top:.75rem;max-height:200px;overflow-y:auto;white-space:pre-wrap;display:none"></pre>
+      </div>
 
       <div class="card">
         <div class="card-title">Skills — what feeds each one (KB, connected indexes, MCP)</div>
@@ -212,6 +223,75 @@
     }
 
     // Live skill-sync progress via SSE
+    // Live org scan
+    const teamState = {};
+    document.getElementById('btn-scan-org').onclick = () => {
+      const btn = document.getElementById('btn-scan-org');
+      const panel = document.getElementById('org-scan-panel');
+      const log = document.getElementById('scan-log');
+      const teamsEl = document.getElementById('scan-teams');
+      btn.disabled = true;
+      btn.textContent = '⏳ Scanning…';
+      panel.style.display = 'block';
+      log.style.display = 'block';
+      log.textContent = '';
+      teamsEl.innerHTML = '';
+      document.getElementById('scan-summary').textContent = '';
+
+      const badge = document.getElementById('live-badge');
+      badge.textContent = 'scanning org';
+      badge.className = 'badge live';
+
+      const es = new EventSource('/api/org-scan');
+      es.onmessage = (ev) => {
+        let d; try { d = JSON.parse(ev.data); } catch { return; }
+        if (d.done) {
+          es.close();
+          btn.disabled = false;
+          btn.textContent = '🔍 Scan Connected Org';
+          badge.textContent = 'idle';
+          badge.className = 'badge';
+          return;
+        }
+        if (d.team === 'system') {
+          if (d.org) document.getElementById('scan-org-name').textContent = d.org;
+          if (d.status === 'complete') document.getElementById('scan-summary').textContent = d.msg;
+          log.textContent += d.msg + '\n';
+          log.scrollTop = log.scrollHeight;
+          return;
+        }
+        // Team card
+        if (!teamState[d.team]) {
+          teamState[d.team] = { el: null, items: [] };
+          const card = document.createElement('div');
+          card.style.cssText = 'background:#12121e;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:12px;font-size:.72rem';
+          card.id = 'team-' + d.team.replace(/\W/g,'_');
+          card.innerHTML = `<div style="font-weight:700;margin-bottom:6px;color:#67e8f9">${esc(d.team)}</div><div id="team-body-${esc(d.team.replace(/\W/g,'_'))}"></div>`;
+          teamsEl.appendChild(card);
+          teamState[d.team].el = card;
+        }
+        const body = document.getElementById('team-body-' + d.team.replace(/\W/g,'_'));
+        if (!body) return;
+        if (d.status === 'running') {
+          body.innerHTML += `<div style="color:#888;margin:2px 0">⏳ ${esc(d.msg)}</div>`;
+        } else if (d.status === 'done') {
+          const items = (d.items || []).slice(0, 8).map(i => `<div style="color:#a8b8bc;padding:1px 0;border-bottom:1px solid rgba(255,255,255,.04)">${esc(i)}</div>`).join('');
+          const more = (d.items || []).length > 8 ? `<div style="color:#555;font-size:.65rem">+${(d.items||[]).length - 8} more…</div>` : '';
+          body.innerHTML += `<div style="color:#34d399;margin:4px 0 2px;font-weight:600">✅ ${esc(d.msg)}</div>${items}${more}`;
+        }
+        log.textContent += `[${esc(d.team)}] ${esc(d.msg)}\n`;
+        log.scrollTop = log.scrollHeight;
+      };
+      es.onerror = () => {
+        es.close();
+        btn.disabled = false;
+        btn.textContent = '🔍 Scan Connected Org';
+        badge.textContent = 'idle';
+        badge.className = 'badge';
+        log.textContent += '❌ Connection lost\n';
+      };
+    };
+
     document.getElementById('btn-refresh-manifest').onclick = () => {
       const btn = document.getElementById('btn-refresh-manifest');
       btn.disabled = true;
