@@ -96,24 +96,82 @@
     .current-stage-label .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); animation: badge-pulse 1.2s ease infinite; }
     .elapsed { font-size: .72rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
 
-    .pipeline { display: flex; align-items: center; flex-wrap: wrap; gap: .3rem; margin-bottom: .9rem; }
-    .pipe-node {
-      padding: .3rem .7rem; border-radius: 6px; font-size: .68rem; font-weight: 600;
-      border: 1px solid var(--border); color: var(--dim); background: var(--bg);
-      transition: all .25s; white-space: nowrap;
+    /* ── Pipeline diagram ── */
+    .pipeline-diagram {
+      display: flex; align-items: center; overflow-x: auto;
+      padding: .5rem 0 .75rem; gap: 0; margin-bottom: .9rem;
+      scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.08) transparent;
     }
-    .pipe-node.done { border-color: rgba(52,211,153,.35); color: var(--green); background: rgba(52,211,153,.07); }
-    .pipe-node.active {
-      border-color: var(--accent); color: #fff; background: rgba(99,102,241,.2);
-      box-shadow: 0 0 12px rgba(99,102,241,.35);
-      animation: stage-pulse 1.3s ease infinite;
+    .pipeline-diagram::-webkit-scrollbar { height: 4px; }
+    .pipeline-diagram::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 2px; }
+
+    .pipe-stage {
+      display: flex; flex-direction: column; align-items: center; flex-shrink: 0;
+      position: relative;
     }
-    @keyframes stage-pulse { 0%,100%{box-shadow:0 0 10px rgba(99,102,241,.3)} 50%{box-shadow:0 0 20px rgba(99,102,241,.6)} }
-    .pipe-arrow { color: var(--dim); font-size: .6rem; }
+    .pipe-connector {
+      width: 28px; height: 2px; flex-shrink: 0; margin-top: -18px;
+      background: var(--border); transition: background .4s;
+    }
+    .pipe-connector.done { background: var(--green); }
+    .pipe-connector.active { background: var(--accent); }
+
+    .pipe-node-box {
+      width: 92px; height: 72px;
+      border: 1.5px solid var(--border); border-radius: 10px;
+      background: var(--bg); display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 4px;
+      transition: all .3s; cursor: default; position: relative;
+      padding: 6px 4px;
+    }
+    .pipe-node-box .pipe-icon {
+      font-size: 1.3rem; line-height: 1; transition: transform .3s;
+    }
+    .pipe-node-box .pipe-label {
+      font-size: .58rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .04em; color: var(--dim); text-align: center;
+      line-height: 1.3;
+    }
+    .pipe-node-box .pipe-status-dot {
+      position: absolute; top: 5px; right: 5px;
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--border); transition: background .3s;
+    }
+
+    /* States */
+    .pipe-node-box.pending { opacity: .45; }
+    .pipe-node-box.done {
+      border-color: rgba(52,211,153,.4); background: rgba(52,211,153,.07);
+    }
+    .pipe-node-box.done .pipe-label { color: var(--green); }
+    .pipe-node-box.done .pipe-status-dot { background: var(--green); }
+    .pipe-node-box.done .pipe-icon::after { content: ' ✓'; font-size: .7rem; color: var(--green); }
+
+    .pipe-node-box.active {
+      border-color: var(--accent);
+      background: rgba(99,102,241,.12);
+      box-shadow: 0 0 0 3px rgba(99,102,241,.15), 0 0 18px rgba(99,102,241,.25);
+      animation: node-glow 1.4s ease infinite;
+    }
+    .pipe-node-box.active .pipe-label { color: #c7d2fe; }
+    .pipe-node-box.active .pipe-status-dot { background: var(--accent); animation: dot-pulse 1.4s ease infinite; }
+    .pipe-node-box.active .pipe-icon { animation: icon-bounce .8s ease infinite alternate; }
+
+    @keyframes node-glow {
+      0%,100% { box-shadow: 0 0 0 3px rgba(99,102,241,.15), 0 0 16px rgba(99,102,241,.2); }
+      50%      { box-shadow: 0 0 0 3px rgba(99,102,241,.3),  0 0 28px rgba(99,102,241,.45); }
+    }
+    @keyframes dot-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.7)} }
+    @keyframes icon-bounce { from{transform:translateY(0)} to{transform:translateY(-3px)} }
+
+    .pipe-node-box.error {
+      border-color: rgba(248,113,113,.4); background: rgba(248,113,113,.07);
+    }
+    .pipe-node-box.error .pipe-status-dot { background: var(--red); }
 
     .progress-row { display: flex; align-items: center; gap: .75rem; }
-    .progress-bar { flex: 1; height: 5px; background: var(--border); border-radius: 99px; overflow: hidden; }
-    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--cyan)); border-radius: 99px; transition: width .4s ease; }
+    .progress-bar { flex: 1; height: 4px; background: var(--border); border-radius: 99px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--cyan)); border-radius: 99px; transition: width .5s ease; }
     .progress-label { font-size: .7rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
 
     /* ── Two-col layout ── */
@@ -262,7 +320,7 @@
         </div>
         <span class="elapsed" id="elapsed">0s</span>
       </div>
-      <div class="pipeline" id="pipeline"></div>
+      <div class="pipeline-diagram" id="pipeline"></div>
       <div class="progress-row">
         <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
         <span class="progress-label" id="progress-label">0 / 0</span>
@@ -375,23 +433,48 @@
     feed.scrollTop = feed.scrollHeight;
   }
 
-  /* ── Stage pipeline render ── */
+  /* ── Stage icons ── */
+  const STAGE_ICONS = {
+    route: '🧭', requirements: '📋', research: '🔍', design: '🏗️',
+    development: '⚙️', admin: '🗄️', qa: '🧪', documentation: '📝',
+    training: '🎓', finalize: '🎯', plan: '📐',
+  };
+
+  /* ── Pipeline diagram render ── */
   function renderPipeline(steps, activeNode) {
     const pipe = document.getElementById('pipeline');
     if (!PIPE_NODES.length && !steps.length) return;
     const nodes = steps.length ? steps : PIPE_NODES;
+
     pipe.innerHTML = nodes.map((n, i) => {
-      const id = n.id || n;
-      const label = n.label || id.replace('_team', '').replace(/_/g, ' ');
-      let cls = '';
+      const id = (n.id || n).replace('_team', '');
+      const label = (n.label || id.replace(/_/g, ' ')).replace(' team', '');
+      let state = 'pending';
       if (steps.length) {
-        cls = n.status === 'running' ? 'active' : (n.status === 'complete' || n.status === 'skipped' ? 'done' : '');
+        const s = (n.status || '').toLowerCase();
+        if (s === 'running') state = 'active';
+        else if (s === 'complete' || s === 'skipped' || s === 'done' || s === 'written') state = 'done';
+        else if (s === 'error') state = 'error';
       } else {
-        cls = id === activeNode ? 'active' : '';
+        if (id === (activeNode || '').replace('_team', '')) state = 'active';
       }
-      const arrow = i < nodes.length - 1 ? '<span class="pipe-arrow">→</span>' : '';
-      return `<span class="pipe-node ${cls}">${esc(label)}</span>${arrow}`;
+      const icon = STAGE_ICONS[id] || '▸';
+      const connector = i > 0
+        ? `<div class="pipe-connector ${state === 'done' ? 'done' : (state === 'active' ? 'active' : '')}"></div>`
+        : '';
+
+      return `${connector}<div class="pipe-stage">
+        <div class="pipe-node-box ${state}" title="${esc(label)}">
+          <span class="pipe-icon">${icon}</span>
+          <span class="pipe-label">${esc(label)}</span>
+          <span class="pipe-status-dot"></span>
+        </div>
+      </div>`;
     }).join('');
+
+    // Scroll active node into view
+    const activeEl = pipe.querySelector('.pipe-node-box.active');
+    if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
   }
 
   /* ── Current stage card ── */
@@ -645,8 +728,8 @@
       const data = await res.json();
       (data.teams || []).forEach(t => { TEAM_META[t.id] = { name: t.name, color: t.color || '#6366f1' }; });
       if (data.graph_nodes?.length) {
-        PIPE_NODES = data.graph_nodes.map(n => ({ id: n.id, label: n.label || n.phase || n.id }));
-        renderPipeline([], '');
+        PIPE_NODES = data.graph_nodes.map(n => ({ id: n.id, label: n.label || n.phase || n.id, status: 'pending' }));
+        renderPipeline(PIPE_NODES, '');
       }
     } catch(e) {}
 
