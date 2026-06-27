@@ -292,6 +292,47 @@ class FleetHandler(BaseHTTPRequestHandler):
             result = start_orchestrator_background(user_input)
             self._json(result)
             return
+        if path.startswith("/docs/"):
+            from config import REPO_ROOT
+            rel = path[6:]
+            file_path = REPO_ROOT / "docs" / rel
+            if file_path.is_file():
+                ext = file_path.suffix.lower()
+                ct = "text/html; charset=utf-8" if ext == ".html" else \
+                     "text/markdown; charset=utf-8" if ext in (".md",".markdown") else \
+                     "application/octet-stream"
+                self._file(file_path, ct)
+            else:
+                self.send_error(404, f"Not found: {rel}")
+            return
+        if path == "/api/run-artifacts":
+            from config import REPO_ROOT, FLEET_DIR
+            import json as _json
+            docs_dir = REPO_ROOT / "docs"
+            artifacts = []
+            try:
+                for fp in sorted(docs_dir.rglob("*.html"), key=lambda p: p.stat().st_mtime, reverse=True)[:15]:
+                    rel_docs = str(fp.relative_to(docs_dir))
+                    artifacts.append({
+                        "name": fp.name,
+                        "path": str(fp.relative_to(REPO_ROOT)),
+                        "url": "/docs/" + rel_docs,
+                        "ext": fp.suffix,
+                        "mtime": fp.stat().st_mtime,
+                    })
+                for fp in sorted(docs_dir.rglob("*.md"), key=lambda p: p.stat().st_mtime, reverse=True)[:5]:
+                    rel_docs = str(fp.relative_to(docs_dir))
+                    artifacts.append({
+                        "name": fp.name,
+                        "path": str(fp.relative_to(REPO_ROOT)),
+                        "url": "/docs/" + rel_docs,
+                        "ext": fp.suffix,
+                        "mtime": fp.stat().st_mtime,
+                    })
+            except Exception:  # noqa: BLE001
+                pass
+            self._json({"artifacts": artifacts})
+            return
         if path == "/api/run-plan":
             # Return PLAN.md + agent assignments for the latest run
             from config import FLEET_DIR

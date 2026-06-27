@@ -362,10 +362,15 @@
 
       <!-- Delivery banner (shown when complete) -->
       <div class="delivery-card" id="delivery-card" style="display:none">
-      <h3>✅ Orchestrator complete</h3>
-      <div class="note">Work orders written — open them in Cursor to run each specialist agent.</div>
-      <div class="path" id="delivery-path"></div>
-    </div>
+        <h3>✅ Orchestrator complete</h3>
+        <div class="note">Work orders written — open them in Cursor to run each specialist agent.</div>
+        <div class="path" id="delivery-path"></div>
+        <!-- Generated artifacts (HTML docs, MD files) -->
+        <div id="artifacts-section" style="display:none;margin-top:.85rem">
+          <div style="font-size:.72rem;font-weight:600;color:var(--green);margin-bottom:.5rem">📄 Generated documents</div>
+          <div id="artifacts-list" style="display:flex;flex-wrap:wrap;gap:.5rem"></div>
+        </div>
+      </div>
 
     <!-- Now + console -->
     <div class="cols" id="now-cols" style="display:none">
@@ -658,12 +663,14 @@
     if (isDone && !isRunning) {
       setBtnState('idle');
       running = false;
+      document.getElementById('delivery-card').style.display = 'block';
       if (delivery) {
         document.getElementById('delivery-path').textContent = delivery;
-        document.getElementById('delivery-card').style.display = 'block';
       }
       addLog(null, 'system', '✅ Run complete — open work orders in Cursor', 'success');
       document.getElementById('btn-msg').textContent = '';
+      // Load generated HTML/MD artifacts
+      loadArtifacts();
     }
   }
 
@@ -783,6 +790,30 @@
       </div>`;
   }
 
+  /* ── Artifacts panel ── */
+  let artifactsLoaded = false;
+  async function loadArtifacts() {
+    try {
+      const res = await fetch('/api/run-artifacts');
+      const d = await res.json();
+      const artifacts = (d.artifacts || []).filter(a => a.ext === '.html');
+      if (!artifacts.length) return;
+      document.getElementById('artifacts-section').style.display = 'block';
+      document.getElementById('artifacts-list').innerHTML = artifacts.map(a => {
+        const icon = a.ext === '.html' ? '🌐' : '📝';
+        return `<a href="${esc(a.url)}" target="_blank" rel="noopener"
+          style="display:inline-flex;align-items:center;gap:.4rem;padding:.4rem .75rem;
+                 border-radius:8px;border:1px solid rgba(52,211,153,.35);
+                 background:rgba(52,211,153,.08);color:var(--green);
+                 font-size:.73rem;font-weight:600;text-decoration:none;
+                 transition:background .15s"
+          onmouseover="this.style.background='rgba(52,211,153,.15)'"
+          onmouseout="this.style.background='rgba(52,211,153,.08)'"
+          >${icon} ${esc(a.name)} <span style="font-size:.6rem;opacity:.7;font-family:'JetBrains Mono',monospace">↗</span></a>`;
+      }).join('');
+    } catch(e) {}
+  }
+
   /* ── Poll ── */
   async function refresh() {
     try {
@@ -812,8 +843,11 @@
       if (run) renderRun(run, status);
       if (status.last_error && !running) document.getElementById('btn-msg').textContent = 'Error: ' + status.last_error;
 
-      // Refresh routing decision + usage
+      // Refresh routing decision + usage + artifacts
       await loadRoutingDecision();
+      if (!running && document.getElementById('delivery-card').style.display !== 'none') {
+        await loadArtifacts();
+      }
       try {
         const ur = await fetch('/api/run-usage');
         const ud = await ur.json();
