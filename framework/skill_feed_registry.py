@@ -11,12 +11,14 @@ from config import GLOBAL_SFDC_NOTES_DIR, KB_DIR, TOPICS, ensure_dirs
 SKILL_FEEDS: Dict[str, Dict[str, List[str]]] = {
     "advanced-salesforce-developer": {
         "open_topics": [
-            "apex-design-patterns",
+            "apex-design-patterns",       # FFLIB, trigger frameworks, OSS patterns
             "governor-limits",
             "security-sharing",
-            "testing-deployment",
-            "lwc-fundamentals",
+            "testing-deployment",         # GitHub Actions, stub API, CI/CD
+            "lwc-fundamentals",           # Jest, LWC recipes
             "cpq-fundamentals",
+            "platform-events-cdc",        # event-driven patterns
+            "salesforce-releases",        # stay current on new platform features
         ],
         "codebase": ["apex-services", "triggers-automation", "pantheon-cpq-backend", "security-fls"],
         "connected": [],
@@ -42,32 +44,48 @@ SKILL_FEEDS: Dict[str, Dict[str, List[str]]] = {
         "project": [],
     },
     "playwright-e2e-validation": {
-        "open_topics": ["lwc-fundamentals", "testing-deployment"],
+        "open_topics": [
+            "lwc-fundamentals",           # LWC structure for DOM targeting
+            "testing-deployment",         # sf CLI test runner, Apex tests
+        ],
         "codebase": ["lwc-catalog", "pantheon-ui", "aura-flexipages"],
         "connected": [],
         "project": ["pantheon-2026-cpq"],
     },
     "sfdc-cta-mentor": {
         "open_topics": [
+            "well-architected",           # Salesforce Well-Architected Framework — core CTA knowledge
             "integration-patterns",
             "governor-limits",
-            "apex-design-patterns",
+            "apex-design-patterns",       # enterprise patterns / FFLIB
             "cpq-fundamentals",
             "security-sharing",
             "flows-automation",
+            "platform-events-cdc",        # EDA and event-driven architecture
+            "data-modelling",             # schema design and ERD
+            "salesforce-releases",        # current platform landscape
         ],
         "codebase": ["nextgen-quoting-runtime", "pantheon-cpq-backend", "metadata-model"],
         "connected": [],
         "project": ["00-architecture-overview", "pantheon-2026-cpq", "data-model-and-automation"],
     },
     "sfdc-metadata-sync": {
-        "open_topics": ["flows-automation", "testing-deployment", "security-sharing"],
+        "open_topics": [
+            "flows-automation",
+            "testing-deployment",         # sf CLI deploy/retrieve, CI/CD
+            "security-sharing",
+            "metadata-model",             # Metadata API types and file format
+            "salesforce-releases",        # new API versions and metadata types
+        ],
         "codebase": ["metadata-model", "security-fls", "flows-declarative", "promotion-manifest"],
         "connected": [],
         "project": ["data-model-and-automation"],
     },
     "sfdc-promotion-workflow": {
-        "open_topics": ["testing-deployment"],
+        "open_topics": [
+            "testing-deployment",         # sf CLI, GitHub Actions, CI/CD
+            "salesforce-releases",        # platform changes that affect promotion
+        ],
         "codebase": ["promotion-manifest"],
         "connected": [],
         "project": [],

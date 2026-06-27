@@ -47,65 +47,90 @@ SCHEDULE_STATE = FLEET_DIR / "schedule.json"
 
 # Mirror topics from .claude/workflows/sfdc-knowledge-swarm.js (shared open resources)
 TOPICS: List[Dict[str, Any]] = [
-    # ── Existing topics (enriched with more URLs) ─────────────────────────────
+    # ── Core Apex & development ───────────────────────────────────────────────
     {
         "key": "apex-design-patterns",
         "title": "Apex Design Patterns & Trigger Frameworks",
-        "focus": "Trigger handler frameworks, service/selector/domain layers, bulkification, recursion control.",
+        "focus": "Trigger handler frameworks, FFLIB enterprise patterns, service/selector/domain layers, bulkification, recursion control.",
         "docs": [
+            # Official Salesforce docs
             "https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_triggers.htm",
             "https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_triggers_bestpract.htm",
             "https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_classes_best_practices.htm",
-            "https://developer.salesforce.com/blogs/2018/06/trigger-frameworks-and-apex-trigger-best-practices",
+            # Open-source framework READMEs (raw GitHub — always fetchable)
+            "https://raw.githubusercontent.com/apex-enterprise-patterns/fflib-apex-common/master/README.md",
+            "https://raw.githubusercontent.com/kevinohara80/sfdc-trigger-framework/master/README.md",
+            "https://raw.githubusercontent.com/mitchspano/apex-trigger-actions-framework/main/README.md",
+            "https://raw.githubusercontent.com/trailheadapps/apex-recipes/main/README.md",
+            # Architect hub
             "https://architect.salesforce.com/design/decision-guides/build-vs-buy",
+            # Community blog
+            "https://developer.salesforce.com/blogs/2018/06/trigger-frameworks-and-apex-trigger-best-practices",
         ],
     },
     {
         "key": "governor-limits",
         "title": "Governor Limits & Large Data Volumes",
-        "focus": "Per-transaction limits, async Apex, LDV strategies, selective queries.",
+        "focus": "Per-transaction limits, async Apex (Batch/Queueable/Future), LDV strategies, selective queries, skinny tables.",
         "docs": [
             "https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_gov_limits.htm",
             "https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_async_overview.htm",
             "https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/langCon_apex_loops.htm",
-            "https://architect.salesforce.com/fundamentals/large-data-volumes",
             "https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_batch_interface.htm",
+            "https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_queueing_jobs.htm",
+            "https://architect.salesforce.com/fundamentals/large-data-volumes",
+            # GitHub: LDV and performance recipes
+            "https://raw.githubusercontent.com/trailheadapps/apex-recipes/main/force-app/main/default/classes/Async%20Apex%20Recipes/QueueableRecipes.cls",
         ],
     },
     {
         "key": "lwc-fundamentals",
         "title": "Lightning Web Components",
-        "focus": "LWC lifecycle, @wire vs imperative Apex, reactivity, events, performance.",
+        "focus": "LWC lifecycle, @wire vs imperative Apex, reactivity, events, performance, accessibility, Jest testing.",
         "docs": [
             "https://developer.salesforce.com/docs/platform/lwc/guide/create-lifecycle-hooks.html",
             "https://developer.salesforce.com/docs/platform/lwc/guide/data-wire-service-about.html",
             "https://developer.salesforce.com/docs/platform/lwc/guide/events-create-dispatch.html",
             "https://developer.salesforce.com/docs/platform/lwc/guide/javascript-intro.html",
             "https://developer.salesforce.com/docs/platform/lwc/guide/accessibility.html",
+            "https://developer.salesforce.com/docs/platform/lwc/guide/unit-testing-using-jest-introduction.html",
+            # Trailhead app recipes (raw GitHub)
+            "https://raw.githubusercontent.com/trailheadapps/lwc-recipes/main/README.md",
+            # Community patterns
+            "https://developer.salesforce.com/blogs/2020/01/lightning-web-components-best-practices",
         ],
     },
     {
         "key": "security-sharing",
         "title": "Security, Sharing & FLS",
-        "focus": "CRUD/FLS, WITH USER_MODE, stripInaccessible, sharing models, perm sets vs profiles.",
+        "focus": "CRUD/FLS, WITH USER_MODE, stripInaccessible, sharing models, perm sets vs profiles, without sharing antipatterns.",
         "docs": [
             "https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_classes_keywords_sharing.htm",
             "https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_security_fls.htm",
             "https://developer.salesforce.com/docs/atlas.en-us.securityImplGuide.meta/securityImplGuide/security_intro.htm",
             "https://developer.salesforce.com/docs/atlas.en-us.securityImplGuide.meta/securityImplGuide/security_sharing_overview.htm",
             "https://architect.salesforce.com/fundamentals/salesforce-security-model",
+            # Community: common FLS mistakes and fixes
+            "https://developer.salesforce.com/blogs/2022/01/protecting-your-data-with-security-and-field-level-security",
+            # GitHub: security recipes
+            "https://raw.githubusercontent.com/trailheadapps/apex-recipes/main/force-app/main/default/classes/Security%20Recipes/CanTheUserRecipes.cls",
         ],
     },
     {
         "key": "integration-patterns",
         "title": "Integration Patterns",
-        "focus": "REST/SOAP callouts, named credentials, Platform Events, CDC, Bulk API.",
+        "focus": "REST/SOAP callouts, named credentials, Platform Events, CDC, Bulk API, MuleSoft, event-driven architecture.",
         "docs": [
             "https://developer.salesforce.com/docs/atlas.en-us.integration_patterns_and_practices.meta/integration_patterns_and_practices/integ_pat_intro_overview.htm",
             "https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_events_intro.htm",
             "https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_intro.htm",
             "https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/asynch_api_intro.htm",
             "https://architect.salesforce.com/decision-guides/integrate-salesforce",
+            "https://architect.salesforce.com/fundamentals/event-driven-architecture",
+            # GitHub: integration recipes
+            "https://raw.githubusercontent.com/trailheadapps/apex-recipes/main/force-app/main/default/classes/Integration%20Recipes/RestClient.cls",
+            # Named Credentials best practices
+            "https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_callouts_named_credentials.htm",
         ],
     },
     {
@@ -134,13 +159,60 @@ TOPICS: List[Dict[str, Any]] = [
     {
         "key": "testing-deployment",
         "title": "Testing & Deployment (SFDX/CI)",
-        "focus": "Apex tests, TestDataFactory, sf CLI deploy/retrieve, CI/CD.",
+        "focus": "Apex tests, TestDataFactory, mock frameworks, sf CLI deploy/retrieve, CI/CD, GitHub Actions for Salesforce.",
         "docs": [
             "https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_testing.htm",
             "https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_testing_best_practices.htm",
+            "https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_testing_stub_api.htm",
             "https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_intro.htm",
             "https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_ci.htm",
             "https://developer.salesforce.com/tools/salesforcecli/sf-deploy-retrieve",
+            # GitHub Actions for Salesforce DX
+            "https://raw.githubusercontent.com/forcedotcom/salesforcedx-actions/main/README.md",
+            # Community: CI/CD patterns
+            "https://developer.salesforce.com/blogs/2021/07/how-to-implement-ci-cd-with-salesforce",
+        ],
+    },
+    # ── New: CTA / Architect level ────────────────────────────────────────────
+    {
+        "key": "well-architected",
+        "title": "Salesforce Well-Architected Framework",
+        "focus": "Trusted, easy, adaptable pillars. Architecture principles, decision guides, trade-off analysis, CTA thinking.",
+        "docs": [
+            "https://architect.salesforce.com/well-architected/overview",
+            "https://architect.salesforce.com/well-architected/trusted/compliant",
+            "https://architect.salesforce.com/well-architected/easy/scalable",
+            "https://architect.salesforce.com/well-architected/efficient",
+            "https://architect.salesforce.com/fundamentals",
+            "https://architect.salesforce.com/design/decision-guides",
+            "https://architect.salesforce.com/decision-guides/build-vs-buy",
+            "https://architect.salesforce.com/decision-guides/choose-between-aura-and-lwc",
+        ],
+    },
+    {
+        "key": "platform-events-cdc",
+        "title": "Platform Events, Change Data Capture & Event-Driven Architecture",
+        "focus": "Pub/Sub API, Platform Events, CDC, event replay, EDA patterns, decoupled integrations.",
+        "docs": [
+            "https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_events_intro.htm",
+            "https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_events_publish_apex.htm",
+            "https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_events_subscribe_apex.htm",
+            "https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_intro.htm",
+            "https://architect.salesforce.com/fundamentals/event-driven-architecture",
+            "https://developer.salesforce.com/docs/platform/pub-sub-api/overview",
+            # GitHub: event-driven recipe
+            "https://raw.githubusercontent.com/trailheadapps/event-driven-recipes/main/README.md",
+        ],
+    },
+    {
+        "key": "salesforce-releases",
+        "title": "Salesforce Release Notes & New Features",
+        "focus": "Latest platform changes, new APIs, deprecated features, migration guidance across Spring/Summer/Winter releases.",
+        "docs": [
+            "https://help.salesforce.com/s/articleView?id=release-notes.salesforce_release_notes.htm&type=5",
+            "https://developer.salesforce.com/docs/atlas.en-us.244.0.api.meta/api/implementation_notes.htm",
+            "https://developer.salesforce.com/changelog",
+            "https://raw.githubusercontent.com/salesforce/salesforcedx-vscode/develop/CHANGELOG.md",
         ],
     },
     # ── New topics: Org Analyst ────────────────────────────────────────────────
