@@ -47,12 +47,17 @@ SCHEDULE_STATE = FLEET_DIR / "schedule.json"
 
 # Mirror topics from .claude/workflows/sfdc-knowledge-swarm.js (shared open resources)
 TOPICS: List[Dict[str, Any]] = [
+    # ── Existing topics (enriched with more URLs) ─────────────────────────────
     {
         "key": "apex-design-patterns",
         "title": "Apex Design Patterns & Trigger Frameworks",
         "focus": "Trigger handler frameworks, service/selector/domain layers, bulkification, recursion control.",
         "docs": [
             "https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_triggers.htm",
+            "https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_triggers_bestpract.htm",
+            "https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_classes_best_practices.htm",
+            "https://developer.salesforce.com/blogs/2018/06/trigger-frameworks-and-apex-trigger-best-practices",
+            "https://architect.salesforce.com/design/decision-guides/build-vs-buy",
         ],
     },
     {
@@ -62,6 +67,9 @@ TOPICS: List[Dict[str, Any]] = [
         "docs": [
             "https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_gov_limits.htm",
             "https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_async_overview.htm",
+            "https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/langCon_apex_loops.htm",
+            "https://architect.salesforce.com/fundamentals/large-data-volumes",
+            "https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_batch_interface.htm",
         ],
     },
     {
@@ -70,6 +78,10 @@ TOPICS: List[Dict[str, Any]] = [
         "focus": "LWC lifecycle, @wire vs imperative Apex, reactivity, events, performance.",
         "docs": [
             "https://developer.salesforce.com/docs/platform/lwc/guide/create-lifecycle-hooks.html",
+            "https://developer.salesforce.com/docs/platform/lwc/guide/data-wire-service-about.html",
+            "https://developer.salesforce.com/docs/platform/lwc/guide/events-create-dispatch.html",
+            "https://developer.salesforce.com/docs/platform/lwc/guide/javascript-intro.html",
+            "https://developer.salesforce.com/docs/platform/lwc/guide/accessibility.html",
         ],
     },
     {
@@ -78,6 +90,10 @@ TOPICS: List[Dict[str, Any]] = [
         "focus": "CRUD/FLS, WITH USER_MODE, stripInaccessible, sharing models, perm sets vs profiles.",
         "docs": [
             "https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_classes_keywords_sharing.htm",
+            "https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_security_fls.htm",
+            "https://developer.salesforce.com/docs/atlas.en-us.securityImplGuide.meta/securityImplGuide/security_intro.htm",
+            "https://developer.salesforce.com/docs/atlas.en-us.securityImplGuide.meta/securityImplGuide/security_sharing_overview.htm",
+            "https://architect.salesforce.com/fundamentals/salesforce-security-model",
         ],
     },
     {
@@ -86,6 +102,10 @@ TOPICS: List[Dict[str, Any]] = [
         "focus": "REST/SOAP callouts, named credentials, Platform Events, CDC, Bulk API.",
         "docs": [
             "https://developer.salesforce.com/docs/atlas.en-us.integration_patterns_and_practices.meta/integration_patterns_and_practices/integ_pat_intro_overview.htm",
+            "https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_events_intro.htm",
+            "https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_intro.htm",
+            "https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/asynch_api_intro.htm",
+            "https://architect.salesforce.com/decision-guides/integrate-salesforce",
         ],
     },
     {
@@ -94,6 +114,9 @@ TOPICS: List[Dict[str, Any]] = [
         "focus": "Quote/QuoteLine model, bundles, product rules, price rules, lookup data.",
         "docs": [
             "https://developer.salesforce.com/docs/revenue/cpq-developer-guide/guide/quote-calculator-plugin.html",
+            "https://developer.salesforce.com/docs/revenue/cpq-developer-guide/guide/pricing_waterfall.html",
+            "https://developer.salesforce.com/docs/revenue/cpq-developer-guide/guide/product_rules.html",
+            "https://developer.salesforce.com/docs/revenue/cpq-developer-guide/guide/bundle_configuration.html",
         ],
     },
     {
@@ -102,6 +125,10 @@ TOPICS: List[Dict[str, Any]] = [
         "focus": "Record-triggered flows, before/after-save, subflows, flow vs Apex.",
         "docs": [
             "https://help.salesforce.com/s/articleView?id=sf.flow.htm&type=5",
+            "https://help.salesforce.com/s/articleView?id=sf.flow_ref_elements_actions_apex.htm&type=5",
+            "https://help.salesforce.com/s/articleView?id=sf.flow_build_best_practices.htm&type=5",
+            "https://architect.salesforce.com/decision-guides/automate-salesforce",
+            "https://developer.salesforce.com/blogs/2021/09/best-practices-for-flow-in-salesforce",
         ],
     },
     {
@@ -110,6 +137,110 @@ TOPICS: List[Dict[str, Any]] = [
         "focus": "Apex tests, TestDataFactory, sf CLI deploy/retrieve, CI/CD.",
         "docs": [
             "https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_testing.htm",
+            "https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_testing_best_practices.htm",
+            "https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_intro.htm",
+            "https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_ci.htm",
+            "https://developer.salesforce.com/tools/salesforcecli/sf-deploy-retrieve",
+        ],
+    },
+    # ── New topics: Org Analyst ────────────────────────────────────────────────
+    {
+        "key": "org-health-assessment",
+        "title": "Salesforce Org Health Assessment & Technical Debt",
+        "focus": "Measuring org health: coverage, dead code, deprecated API, duplicate automation, technical debt scoring.",
+        "docs": [
+            "https://architect.salesforce.com/well-architected/overview",
+            "https://architect.salesforce.com/well-architected/reliable/resilient",
+            "https://architect.salesforce.com/well-architected/efficient",
+            "https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_testing_code_coverage.htm",
+            "https://help.salesforce.com/s/articleView?id=sf.code_builder_overview.htm&type=5",
+        ],
+    },
+    {
+        "key": "security-vulnerability-scanning",
+        "title": "Salesforce Security Vulnerabilities & Static Analysis",
+        "focus": "PMD rules for Apex, SOQL injection, XSS in LWC, over-permissioned profiles, guest user exposure, ISV security review.",
+        "docs": [
+            "https://developer.salesforce.com/docs/atlas.en-us.securityImplGuide.meta/securityImplGuide/security_apex_soql_injection.htm",
+            "https://developer.salesforce.com/docs/atlas.en-us.securityImplGuide.meta/securityImplGuide/security_apex_cross_site.htm",
+            "https://developer.salesforce.com/tools/vscode/en/codeanalyzerplugin/gettingstarted",
+            "https://developer.salesforce.com/docs/atlas.en-us.packagingGuide.meta/packagingGuide/security_review_guidelines.htm",
+            "https://pmd.github.io/pmd/pmd_rules_apex_security.html",
+            "https://pmd.github.io/pmd/pmd_rules_apex_bestpractices.html",
+            "https://pmd.github.io/pmd/pmd_rules_apex_performance.html",
+        ],
+    },
+    {
+        "key": "permission-model",
+        "title": "Salesforce Permission Model & Access Control",
+        "focus": "Permission sets vs profiles, muting sets, permission set groups, OWD, sharing rules, role hierarchy.",
+        "docs": [
+            "https://help.salesforce.com/s/articleView?id=sf.perm_sets_overview.htm&type=5",
+            "https://help.salesforce.com/s/articleView?id=sf.perm_set_groups.htm&type=5",
+            "https://developer.salesforce.com/docs/atlas.en-us.securityImplGuide.meta/securityImplGuide/security_data_access.htm",
+            "https://architect.salesforce.com/fundamentals/salesforce-security-model",
+            "https://help.salesforce.com/s/articleView?id=sf.security_sharing_owd_about.htm&type=5",
+        ],
+    },
+    # ── New topics: Reverse Engineer ──────────────────────────────────────────
+    {
+        "key": "metadata-model",
+        "title": "Salesforce Metadata API & Object Model",
+        "focus": "Metadata types, sfdx-project.json, package.xml, custom objects, fields, relationships, retrieve/deploy.",
+        "docs": [
+            "https://developer.salesforce.com/docs/atlas.en-us.api_meta.meta/api_meta/meta_intro.htm",
+            "https://developer.salesforce.com/docs/atlas.en-us.api_meta.meta/api_meta/meta_field_types.htm",
+            "https://developer.salesforce.com/docs/atlas.en-us.api_meta.meta/api_meta/meta_customobject.htm",
+            "https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_source_file_format.htm",
+            "https://developer.salesforce.com/docs/atlas.en-us.object_reference.meta/object_reference/sforce_api_objects_list.htm",
+        ],
+    },
+    {
+        "key": "data-modelling",
+        "title": "Salesforce Data Modelling & Schema Design",
+        "focus": "Object relationships, junction objects, external IDs, rollup summaries, schema best practices, data dictionary patterns.",
+        "docs": [
+            "https://architect.salesforce.com/fundamentals/data-modeling",
+            "https://developer.salesforce.com/docs/atlas.en-us.api.meta/api/relationships_and_custom_objects.htm",
+            "https://help.salesforce.com/s/articleView?id=sf.relationships_considerations.htm&type=5",
+            "https://help.salesforce.com/s/articleView?id=sf.customize_objectcreating.htm&type=5",
+            "https://architect.salesforce.com/decision-guides/build-vs-buy",
+        ],
+    },
+    # ── New topics: PR Reviewer ────────────────────────────────────────────────
+    {
+        "key": "apex-code-review",
+        "title": "Apex Code Review Checklist & Best Practices",
+        "focus": "Code review criteria: bulkification, SOQL/DML in loops, handler pattern, null safety, test quality, hardcoded IDs.",
+        "docs": [
+            "https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_best_practices.htm",
+            "https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_bulk_process.htm",
+            "https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_dml_exceptions.htm",
+            "https://pmd.github.io/pmd/pmd_rules_apex.html",
+            "https://developer.salesforce.com/blogs/2022/01/from-good-to-great-writing-high-quality-apex-code",
+        ],
+    },
+    {
+        "key": "lwc-code-review",
+        "title": "LWC Code Review & Accessibility",
+        "focus": "LWC review criteria: error handling, reactivity, accessibility, no DOM mutation, no hardcoded values.",
+        "docs": [
+            "https://developer.salesforce.com/docs/platform/lwc/guide/accessibility.html",
+            "https://developer.salesforce.com/docs/platform/lwc/guide/js-best-practices.html",
+            "https://developer.salesforce.com/docs/platform/lwc/guide/debug-intro.html",
+            "https://developer.salesforce.com/docs/platform/lwc/guide/security-lwc.html",
+        ],
+    },
+    {
+        "key": "flow-review",
+        "title": "Salesforce Flow Code Review & Best Practices",
+        "focus": "Flow review: null-safety on Get Records, fault paths, bulk-safety, no duplicate automation, before vs after save.",
+        "docs": [
+            "https://help.salesforce.com/s/articleView?id=sf.flow_build_best_practices.htm&type=5",
+            "https://help.salesforce.com/s/articleView?id=sf.flow_ref_elements_data_get.htm&type=5",
+            "https://help.salesforce.com/s/articleView?id=sf.flow_ref_fault.htm&type=5",
+            "https://developer.salesforce.com/blogs/2021/05/flow-best-practices-and-considerations",
+            "https://architect.salesforce.com/decision-guides/automate-salesforce",
         ],
     },
 ]

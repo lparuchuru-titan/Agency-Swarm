@@ -101,6 +101,57 @@ class FleetHandler(BaseHTTPRequestHandler):
 
             self._json(cursor_fleet_snapshot())
             return
+        if path == "/api/skill/sync":
+            # SSE stream — EventSource uses GET; emits live progress lines
+            self.send_response(200)
+            self.send_header("Content-Type", "text/event-stream")
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Transfer-Encoding", "chunked")
+            self.end_headers()
+
+            def _emit(msg: str) -> None:
+                line = f"data: {json.dumps({'msg': msg})}\n\n"
+                try:
+                    self.wfile.write(line.encode("utf-8"))
+                    self.wfile.flush()
+                except Exception:  # noqa: BLE001
+                    pass
+
+            try:
+                _emit("⏳ Starting skill-refresh …")
+                from skill_sync import refresh_skill_manifest
+                _emit("📋 Syncing skill manifest …")
+                result = refresh_skill_manifest()
+                skill_rows = result.get("skills", []) if isinstance(result, dict) else []
+                if isinstance(skill_rows, list):
+                    for row in skill_rows:
+                        if not isinstance(row, dict):
+                            continue
+                        present = row.get("kb_present", 0)
+                        total = row.get("kb_links", 0)
+                        _emit(f"  ✅ {row.get('skill','?')} — {present}/{total} KB paths present")
+                _emit("📂 Writing per-skill feed docs …")
+                from skill_feed_registry import refresh_skill_open_feeds
+                feed_result = refresh_skill_open_feeds(force=False)
+                skill_list = feed_result.get("skills", []) if isinstance(feed_result, dict) else []
+                if isinstance(skill_list, list):
+                    for s in skill_list:
+                        if not isinstance(s, dict):
+                            continue
+                        topics = s.get("open_topics", 0)
+                        codebase = s.get("codebase", 0)
+                        # open_topics/codebase may be int (count) or list — handle both
+                        t = len(topics) if isinstance(topics, list) else int(topics)
+                        c = len(codebase) if isinstance(codebase, list) else int(codebase)
+                        _emit(f"  📄 {s.get('skill','?')} — {t} open topics, {c} codebase feeds")
+                manifest_path = result.get("manifest_path", "") if isinstance(result, dict) else ""
+                _emit(f"✅ Done — manifest at {manifest_path}" if manifest_path else "✅ Skill sync complete")
+                _emit("__DONE__")
+            except Exception as exc:  # noqa: BLE001
+                _emit(f"❌ Error: {exc}")
+                _emit("__DONE__")
+            return
         if path in ("/skills-fleet.html", "/skills"):
             self._file(STATIC / "skills-fleet.html", "text/html; charset=utf-8")
             return
@@ -144,45 +195,8 @@ class FleetHandler(BaseHTTPRequestHandler):
             self._json(result)
             return
         if path == "/api/skill/sync":
-            # SSE stream so the UI shows live progress as each step completes
-            self.send_response(200)
-            self.send_header("Content-Type", "text/event-stream")
-            self.send_header("Cache-Control", "no-store")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.send_header("Transfer-Encoding", "chunked")
-            self.end_headers()
-
-            def _emit(msg: str) -> None:
-                line = f"data: {json.dumps({'msg': msg})}\n\n"
-                try:
-                    self.wfile.write(line.encode("utf-8"))
-                    self.wfile.flush()
-                except Exception:  # noqa: BLE001
-                    pass
-
-            try:
-                _emit("⏳ Starting skill-refresh …")
-                from skill_sync import refresh_skill_manifest
-                _emit("📋 Syncing skill manifest …")
-                result = refresh_skill_manifest()
-                skill_rows = result.get("skills", [])
-                for row in skill_rows:
-                    present = row.get("kb_present", 0)
-                    total = row.get("kb_links", 0)
-                    _emit(f"  ✅ {row['skill']} — {present}/{total} KB paths present")
-                _emit("📂 Writing per-skill feed docs …")
-                from skill_feed_registry import refresh_skill_open_feeds
-                feed_result = refresh_skill_open_feeds(force=False)
-                for s in feed_result.get("skills", []):
-                    topics = s.get("open_topics", 0)
-                    codebase = s.get("codebase", 0)
-                    _emit(f"  📄 {s['skill']} — {topics} open topics, {codebase} codebase feeds")
-                manifest_path = result.get("manifest_path", "")
-                _emit(f"✅ Done — manifest at {manifest_path}" if manifest_path else "✅ Skill sync complete")
-                _emit("__DONE__")
-            except Exception as exc:  # noqa: BLE001
-                _emit(f"❌ Error: {exc}")
-                _emit("__DONE__")
+            # POST kept for backward compat — live stream is on GET /api/skill/sync
+            self._json({"ok": True, "note": "Use GET /api/skill/sync for live SSE stream"})
             return
         self.send_error(404)
 

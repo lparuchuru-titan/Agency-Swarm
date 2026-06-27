@@ -75,6 +75,11 @@ SKILL_FEEDS: Dict[str, Dict[str, List[str]]] = {
     # ── New generic lifecycle agents ─────────────────────────────────────────
     "org-analyst": {
         "open_topics": [
+            # Dedicated org-health topics
+            "org-health-assessment",
+            "security-vulnerability-scanning",
+            "permission-model",
+            # Supporting topics
             "security-sharing",
             "testing-deployment",
             "governor-limits",
@@ -85,7 +90,15 @@ SKILL_FEEDS: Dict[str, Dict[str, List[str]]] = {
         "project": ["data-model-and-automation"],
     },
     "reverse-engineer": {
-        "open_topics": ["flows-automation", "apex-design-patterns"],
+        "open_topics": [
+            # Dedicated reverse-engineering topics
+            "metadata-model",
+            "data-modelling",
+            # Supporting topics
+            "flows-automation",
+            "apex-design-patterns",
+            "integration-patterns",
+        ],
         "codebase": [
             "metadata-model",
             "apex-services",
@@ -98,11 +111,15 @@ SKILL_FEEDS: Dict[str, Dict[str, List[str]]] = {
     },
     "pr-reviewer": {
         "open_topics": [
-            "apex-design-patterns",
+            # Dedicated code-review topics
+            "apex-code-review",
+            "lwc-code-review",
+            "flow-review",
+            # Supporting topics
+            "security-vulnerability-scanning",
             "security-sharing",
             "testing-deployment",
             "governor-limits",
-            "lwc-fundamentals",
         ],
         "codebase": ["apex-services", "triggers-automation", "security-fls"],
         "connected": [],
