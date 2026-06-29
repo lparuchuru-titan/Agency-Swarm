@@ -1,0 +1,43 @@
+{
+  "_comment": "Copy this file to your SFDX project root as swarm.config.json and fill in your values.",
+
+  "project": {
+    "name": "My Salesforce Project",
+    "description": "Short description of what this org is for"
+  },
+
+  "org": {
+    "comment": "Leave blank to use sf CLI default org (.sf/config.json target-org)",
+    "alias": "",
+    "instance_url": ""
+  },
+
+  "jira": {
+    "comment": "Your Jira project key — used by Jira Analyst to search tickets",
+    "project_key": "PROJ",
+    "base_url": "https://yourcompany.atlassian.net"
+  },
+
+  "promotion": {
+    "comment": "Where your promotion repo lives (for sfdc-promotion-workflow)",
+    "repo_name": "SFDC-CRM-SFDX",
+    "base_branch": "main",
+    "sandbox_branch_prefix": "feature/"
+  },
+
+  "agents": {
+    "comment": "Which model to use for agents. 'auto' lets Cursor pick.",
+    "model": "auto",
+    "timeout_seconds": 120
+  },
+
+  "cursor": {
+    "comment": "Get your API key at cursor.com/dashboard/integrations",
+    "api_key_env": "CURSOR_API_KEY"
+  },
+
+  "slack": {
+    "comment": "Optional — Slack workspace for sending messages",
+    "workspace_url": ""
+  }
+}

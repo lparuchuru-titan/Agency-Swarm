@@ -227,11 +227,16 @@ _DOMAIN_CONFIG: Dict[str, Dict[str, Any]] = {
         "retrieve_soql_names": True,
     },
     "security": {
-        "retrieve": ["Profile:Admin", "PermissionSet:OSCPQ_Salesforce_CPQ_User", "PermissionSet:OSCPQ_Salesforce_CPQ_Admin"],
+        # No hardcoded retrieve specs — dynamically discover and retrieve the top permission sets
+        "retrieve_soql_names": True,
         "soql": [
             {"label": "Custom permission sets", "q": "SELECT Name, Label FROM PermissionSet WHERE IsOwnedByProfile = false AND NamespacePrefix = null ORDER BY Name LIMIT 20"},
             {"label": "Profiles with ModifyAll", "q": "SELECT Name FROM Profile WHERE PermissionsModifyAllData = true LIMIT 10"},
+            {"label": "Permission set groups", "q": "SELECT MasterLabel, DeveloperName FROM PermissionSetGroup ORDER BY MasterLabel LIMIT 20"},
         ],
+        # Dynamic: retrieve the top 5 custom permission sets discovered by SOQL
+        "_retrieve_type": "PermissionSet",
+        "_retrieve_name_field": "Name",
     },
 }
 
@@ -304,7 +309,7 @@ _DOMAIN_QUERIES: Dict[str, List[Dict[str, str]]] = {
 }
 
 _KEYWORD_MAP = {
-    "cpq": ["cpq", "quote", "quoting", "bundle", "product", "price", "sbqq", "pantheon", "discount"],
+    "cpq": ["cpq", "quote", "quoting", "bundle", "product", "price", "sbqq", "discount", "revenue cloud"],
     "billing": ["billing", "invoice", "revenue", "blng", "tax", "payment", "finance", "order"],
     "apex": ["apex", "trigger", "class", "code", "coverage"],
     "lwc": ["lwc", "lightning", "component", "aura", "ui", "frontend"],
