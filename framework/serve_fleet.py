@@ -525,11 +525,8 @@ def run_server(host: str = "127.0.0.1", port: int = 8765) -> None:
     print(" Keep this terminal open. Ctrl+C to stop.")
     print("==============================================")
 
-    try:
-        import webbrowser
-        webbrowser.open(url)
-    except Exception:  # noqa: BLE001
-        pass
+    # Browser auto-open disabled — navigate manually to avoid double-open
+    # when started via osascript. URL is printed above.
 
     try:
         server.serve_forever()
