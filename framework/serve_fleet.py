@@ -279,7 +279,7 @@ class FleetHandler(BaseHTTPRequestHandler):
             artifacts = []
             try:
                 for fp in sorted(docs_dir.rglob("*.html"),
-                                 key=lambda p: p.stat().st_mtime, reverse=True)[:20]:
+                                 key=lambda p: p.stat().st_mtime, reverse=True)[:10]:
                     rel_docs = str(fp.relative_to(docs_dir))
                     artifacts.append({
                         "name": fp.name,
