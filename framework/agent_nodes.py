@@ -632,7 +632,7 @@ Produce:
 def run_research_team(state: Dict[str, Any]) -> Dict[str, Any]:
     run_id = state["run_id"]
     mark_team_phase(run_id, "research", "KB + live org research", "research_team")
-    agent_id = "kb-researcher"
+    agent_id = "org-scout"
     update_agent(run_id, agent_id, {"status": "running", "started_at": _now(), "team_id": "research"})
     ctx = get_runtime()
     org = ctx.get("targetOrgAlias", "")

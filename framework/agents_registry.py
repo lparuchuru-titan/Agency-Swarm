@@ -68,15 +68,15 @@ AGENTS: List[Dict[str, Any]] = [
         "description": "Analyzes user input and delegates to specialist teams",
     },
     {
-        "id": "kb-researcher",
-        "name": "KB Researcher",
+        "id": "org-scout",
+        "name": "Org Scout",
         "team": "research",
         "role": "research",
         "skills": ["codebase-explainer"],
         "cursor_agent": "codebase-explainer",
-        "intents": ["research", "context", "rag", "lookup"],
+        "intents": ["research", "context", "rag", "lookup", "scout", "scan"],
         "kb_topics": ["codebase/*", "project/*"],
-        "description": "Aggregates KB + connected indexes before dev agents run",
+        "description": "Scouts the org before the team starts: full metadata scan (22 types), source retrieval, and context packaging for downstream agents",
     },
     # --- Requirements ---
     {
