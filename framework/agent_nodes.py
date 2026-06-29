@@ -22,7 +22,12 @@ from config import FLEET_DIR, GLOBAL_SFDC_NOTES_DIR, KB_DIR, REPO_ROOT, get_runt
 from fleet_hooks import append_activity, mark_team_phase, update_agent
 
 FLEET_RUNS = FLEET_DIR / "runs"
-_NODE = shutil.which("node") or "node"
+_NODE = (
+    shutil.which("node")
+    or os.environ.get("NODE_PATH", "")
+    or "/Users/lakshmikanthparuchuru/.local/node/bin/node"
+    or "node"
+)
 _RUNNER = str(Path(__file__).parent / "cursor_agent_runner.js")
 _MODEL = os.environ.get("CURSOR_AGENT_MODEL", "auto")
 _SF = shutil.which("sf") or "sf"

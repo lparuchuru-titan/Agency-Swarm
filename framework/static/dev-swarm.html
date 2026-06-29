@@ -417,8 +417,9 @@
   let lastActivityCount = 0;
   let PIPE_NODES = [];
   let TEAM_META = {};
-  let lastPipelineHash = '';   // prevent pipeline re-render on every tick
-  let lastAgentHash = '';       // prevent agent grid re-render on every tick
+  let lastPipelineHash = '';
+  let lastAgentHash = '';
+  let currentRunId = '';    // track active run — reset UI when run_id changes
 
   const STAGE_DESCS = {
     route: 'Analysing your request and picking the right teams.',
@@ -637,8 +638,23 @@
     // Pipeline
     const steps = run.pipeline_steps || [];
     const activeNode = run.active_graph_node || '';
-    // Only re-render pipeline when state actually changes (prevents scroll jank)
-    const pipeHash = JSON.stringify(steps.map(s => s.id + s.status)) + activeNode;
+    const thisRunId = run.run_id || '';
+
+    // New run started — reset all UI state so pipeline animates fresh
+    if (thisRunId && thisRunId !== currentRunId) {
+      currentRunId = thisRunId;
+      lastPipelineHash = '';
+      lastAgentHash = '';
+      lastActivityCount = 0;
+      logLines = [];
+      document.getElementById('console-feed').innerHTML = '';
+      document.getElementById('delivery-card').style.display = 'none';
+      document.getElementById('artifacts-section') && (document.getElementById('artifacts-section').style.display = 'none');
+      document.getElementById('usage-panel').style.display = 'none';
+    }
+
+    // Re-render pipeline when state changes
+    const pipeHash = JSON.stringify(steps.map(s => s.id + s.status)) + activeNode + thisRunId;
     if (pipeHash !== lastPipelineHash) {
       lastPipelineHash = pipeHash;
       renderPipeline(steps, activeNode, run);
@@ -893,15 +909,29 @@
 
     setBtnState('submitting');
     document.getElementById('btn-msg').textContent = '';
-    document.getElementById('delivery-card').style.display = 'none';
+
+    // Reset all run-specific UI immediately so it feels fresh
     logLines = [];
     lastActivityCount = 0;
+    lastPipelineHash = '';
+    lastAgentHash = '';
+    currentRunId = '';
     document.getElementById('console-feed').innerHTML = '';
+    document.getElementById('delivery-card').style.display = 'none';
+    document.getElementById('usage-panel').style.display = 'none';
+    document.getElementById('routing-card').style.display = 'none';
+    document.getElementById('active-agent-hero').style.display = 'none';
+    document.getElementById('team-grid').style.display = 'none';
     document.getElementById('stage-hero').style.display = 'block';
     document.getElementById('now-cols').style.display = 'grid';
-    document.getElementById('team-grid').style.display = 'none';
     document.getElementById('now-stage-name').textContent = 'Starting…';
     document.getElementById('now-stage-desc').textContent = 'Sending request to orchestrator…';
+    // Reset pipeline to all-pending so it animates from scratch
+    if (PIPE_NODES.length) {
+      renderPipeline(PIPE_NODES.map(n => ({...n, status: 'pending'})), '', null);
+    }
+    document.getElementById('progress-fill').style.width = '0%';
+    document.getElementById('progress-label').textContent = '0 / 0';
 
     addLog(null, 'system', `▶ Task: "${input}"`, 'info');
 
