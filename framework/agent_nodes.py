@@ -152,6 +152,43 @@ def _retrieve_metadata(
     return "\n\n".join(sections)
 
 
+# ── Full org baseline scan — always runs regardless of domain ──────────────
+# These queries run on EVERY research request to give the agent a complete
+# picture of the org before it does any domain-specific deep dive.
+_BASELINE_SOQL: List[Dict[str, str]] = [
+    # Objects & schema
+    {"label": "Custom Objects", "q": "SELECT Label, QualifiedApiName, KeyPrefix, Description FROM EntityDefinition WHERE IsCustomizable = true AND QualifiedApiName LIKE '%__c' ORDER BY QualifiedApiName LIMIT 80"},
+    {"label": "Custom Metadata Types", "q": "SELECT Label, QualifiedApiName FROM EntityDefinition WHERE IsCustomSetting = false AND IsCustomizable = true AND QualifiedApiName LIKE '%__mdt' ORDER BY QualifiedApiName LIMIT 30"},
+    {"label": "Custom Settings", "q": "SELECT Label, QualifiedApiName FROM EntityDefinition WHERE IsCustomSetting = true ORDER BY QualifiedApiName LIMIT 20"},
+    # Apex
+    {"label": "Apex Classes (by size)", "q": "SELECT Name, ApiVersion, LengthWithoutComments, Status FROM ApexClass WHERE NamespacePrefix = null ORDER BY LengthWithoutComments DESC LIMIT 50"},
+    {"label": "Apex Triggers", "q": "SELECT Name, TableEnumOrId, Status, ApiVersion FROM ApexTrigger WHERE NamespacePrefix = null ORDER BY TableEnumOrId LIMIT 40"},
+    {"label": "Test Coverage Summary", "q": "SELECT ApexClassOrTrigger.Name, NumLinesCovered, NumLinesUncovered FROM ApexCodeCoverageAggregate WHERE NumLinesUncovered > 0 ORDER BY NumLinesUncovered DESC LIMIT 20"},
+    # Automation
+    {"label": "Active Flows (all types)", "q": "SELECT MasterLabel, ProcessType, TriggerType, ApiVersion, Status FROM Flow WHERE Status = 'Active' ORDER BY ProcessType, MasterLabel LIMIT 60"},
+    {"label": "Validation Rules", "q": "SELECT EntityDefinition.QualifiedApiName, ValidationName, Active FROM ValidationRule WHERE Active = true ORDER BY EntityDefinition.QualifiedApiName LIMIT 50"},
+    {"label": "Workflow Rules (active)", "q": "SELECT Name, TableEnumOrId FROM WorkflowRule WHERE Metadata.active = true LIMIT 20"},
+    # UI & Components
+    {"label": "LWC Components", "q": "SELECT DeveloperName, MasterLabel FROM LightningComponentBundle ORDER BY DeveloperName LIMIT 60"},
+    {"label": "Aura Bundles", "q": "SELECT DeveloperName FROM AuraDefinitionBundle ORDER BY DeveloperName LIMIT 30"},
+    {"label": "Visualforce Pages", "q": "SELECT Name, ApiVersion FROM ApexPage WHERE NamespacePrefix = null ORDER BY Name LIMIT 30"},
+    # Security & Permissions
+    {"label": "Custom Permission Sets", "q": "SELECT Name, Label, Description FROM PermissionSet WHERE IsOwnedByProfile = false AND NamespacePrefix = null ORDER BY Name LIMIT 40"},
+    {"label": "Profiles", "q": "SELECT Name, UserType FROM Profile ORDER BY Name LIMIT 30"},
+    {"label": "Permission Set Groups", "q": "SELECT MasterLabel, DeveloperName FROM PermissionSetGroup ORDER BY MasterLabel LIMIT 20"},
+    # Integration
+    {"label": "Named Credentials", "q": "SELECT DeveloperName, Endpoint, AuthProtocol FROM NamedCredential ORDER BY DeveloperName LIMIT 20"},
+    {"label": "Connected Apps", "q": "SELECT Name, ContactEmail FROM ConnectedApplication ORDER BY Name LIMIT 20"},
+    # Configuration
+    {"label": "Custom Labels", "q": "SELECT Name, Value, Category FROM ExternalString ORDER BY Name LIMIT 40"},
+    {"label": "Custom Metadata Records", "q": "SELECT Label, QualifiedApiName FROM CustomObjectDefinition WHERE DeveloperName LIKE '%__mdt' LIMIT 10"},
+    # Reports & Dashboards
+    {"label": "Reports", "q": "SELECT Name, DeveloperName, FolderName FROM Report ORDER BY Name LIMIT 30"},
+    {"label": "Dashboards", "q": "SELECT Title, DeveloperName, FolderName FROM Dashboard ORDER BY Title LIMIT 20"},
+    # Packages
+    {"label": "Installed Packages", "q": "SELECT SubscriberPackage.Name, SubscriberPackageVersion.MajorVersion, SubscriberPackageVersion.MinorVersion FROM InstalledSubscriberPackage ORDER BY SubscriberPackage.Name LIMIT 20"},
+]
+
 # Domain config: what to retrieve + discovery SOQL
 _DOMAIN_CONFIG: Dict[str, Dict[str, Any]] = {
     "cpq": {
@@ -362,9 +399,22 @@ def _live_org_context(user_input: str, org: str, run_id: str, agent_id: str) -> 
     if not org:
         return "_No org configured — run `sfdc-swarm context` to set target org._"
 
-    append_activity(run_id, agent_id, f"🔍 Connecting to {org} — domains: {', '.join(domains)}")
+    append_activity(run_id, agent_id, f"🔍 Connecting to {org} — full metadata scan + domain deep-dive: {', '.join(domains) if domains else 'general'}")
     sections: List[str] = [f"## Live org data from {org}\n"]
 
+    # ── Phase 1: Full baseline scan (every org, every request) ───────────────
+    append_activity(run_id, agent_id, "📋 Running full baseline metadata scan…")
+    baseline_success = 0
+    for q in _BASELINE_SOQL:
+        result = _soql(org, q["q"], q["label"])
+        if "no records found" not in result and "failed" not in result:
+            sections.append(result)
+            baseline_success += 1
+    append_activity(run_id, agent_id, f"  ✅ Baseline: {baseline_success}/{len(_BASELINE_SOQL)} metadata types scanned")
+
+    # ── Phase 2: Domain-specific deep dive (retrieve actual source) ──────────
+    if domains:
+        append_activity(run_id, agent_id, f"🔬 Domain deep-dive: {', '.join(domains)}")
     for domain in domains:
         cfg = _DOMAIN_CONFIG.get(domain, {})
 
