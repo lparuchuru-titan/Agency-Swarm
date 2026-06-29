@@ -84,14 +84,48 @@ def start_orchestrator_background(user_input: str) -> Dict[str, Any]:
     }
 
 
+def _cleanup_stale_runs() -> None:
+    """
+    Mark any run stuck in 'running' status as 'complete' when no worker
+    thread is actually alive. Prevents the 'running' badge getting stuck
+    after a crash, timeout, or restart.
+    """
+    from datetime import datetime, timezone
+    import json
+    from pathlib import Path
+
+    try:
+        from config import FLEET_STATE
+        if not Path(FLEET_STATE).exists():
+            return
+        state = json.loads(Path(FLEET_STATE).read_text(encoding="utf-8"))
+        changed = False
+        for run in state.get("runs", []):
+            if run.get("status") == "running":
+                run["status"] = "complete"
+                run["ended_at"] = datetime.now(timezone.utc).isoformat()
+                run["_auto_closed"] = "worker not running at status check"
+                changed = True
+        if changed:
+            Path(FLEET_STATE).write_text(json.dumps(state, indent=2), encoding="utf-8")
+    except Exception:  # noqa: BLE001
+        pass
+
+
 def swarm_status() -> Dict[str, Any]:
     with _lock:
+        worker_alive = _running
         status = {
-            "worker_running": _running,
+            "worker_running": worker_alive,
             "last_error": _last_error,
             "orchestrator_input": _orchestrator_input,
         }
-    from fleet_hooks import is_run_active
 
+    # If no worker is running but fleet state shows a run as 'running',
+    # it's a stale orphan — clean it up automatically.
+    if not worker_alive:
+        _cleanup_stale_runs()
+
+    from fleet_hooks import is_run_active
     status["fleet_run_active"] = is_run_active()
     return status
