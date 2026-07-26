@@ -137,6 +137,22 @@ Commit changes in **this repo** (`framework/`, `templates/`). Consumer projects 
 
 ---
 
+
+---
+
+## Validation
+
+Before publishing or after local changes, run the deep E2E suite (no API keys required):
+
+```bash
+pip install -r framework/requirements.txt
+python3 tests/test_framework.py
+# or:
+./scripts/validate-e2e.sh
+```
+
+CI runs the same suite on every push via `.github/workflows/validate.yml`.
+
 ## License
 
 [MIT](LICENSE)

@@ -1,4 +1,4 @@
-"""Bridge swarm runtime to ~/.cursor/skills/_shared/sfdc_context.py."""
+"""Bridge swarm runtime to shared sfdc_context (global skills or vendored copy)."""
 from __future__ import annotations
 
 import json
@@ -6,15 +6,33 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-_SHARED = Path.home() / ".cursor" / "skills" / "_shared"
+_FRAMEWORK_DIR = Path(__file__).resolve().parent
+_SHARED_CANDIDATES = [
+    Path.home() / ".cursor" / "skills" / "_shared",
+    _FRAMEWORK_DIR / "vendor" / "_shared",
+    _FRAMEWORK_DIR.parent / "templates" / "cursor" / "skills" / "_shared",
+]
 
 
 def _import_sfdc_context():
-    if str(_SHARED) not in sys.path:
-        sys.path.insert(0, str(_SHARED))
-    from sfdc_context import resolve_context  # noqa: WPS433
+    last_err: Optional[Exception] = None
+    for shared in _SHARED_CANDIDATES:
+        if not (shared / "sfdc_context.py").is_file():
+            continue
+        path = str(shared)
+        if path not in sys.path:
+            sys.path.insert(0, path)
+        try:
+            from sfdc_context import resolve_context  # noqa: WPS433
 
-    return resolve_context
+            return resolve_context
+        except Exception as exc:  # noqa: BLE001
+            last_err = exc
+            continue
+    raise ImportError(
+        "Cannot import sfdc_context. Install skills via scripts/install-skills.sh "
+        f"or keep framework/vendor/_shared. Last error: {last_err}"
+    )
 
 
 def find_project_root(start: Optional[Path] = None) -> Path:
@@ -40,7 +58,7 @@ def resolve_swarm_context(
     if not swarm_home or not swarm_home.is_dir():
         swarm_home = Path.home() / ".cursor" / "sfdc-knowledge-swarm"
     if not swarm_home.is_dir():
-        swarm_home = Path(__file__).resolve().parent
+        swarm_home = _FRAMEWORK_DIR
 
     source_path = ctx.get("sourcePath", "force-app/main/default")
     pkg_root = source_path.split("/")[0] if "/" in source_path else "force-app"
@@ -80,21 +98,20 @@ def resolve_swarm_context(
     }
 
 
-def adapt_glob_pattern(pattern: str, ctx: Dict[str, Any]) -> str:
-    """Rewrite force-app/* globs for Master/ or other package roots."""
-    pkg = ctx.get("sourcePackageRoot", "force-app")
-    if pattern.startswith("force-app/"):
-        return pattern.replace("force-app/", f"{pkg}/", 1)
-    return pattern
-
-
 def _project_name(root: Path) -> str:
     try:
         data = json.loads((root / "sfdx-project.json").read_text(encoding="utf-8"))
-        return data.get("name") or root.name
-    except (OSError, json.JSONDecodeError):
-        return root.name
+        if data.get("name"):
+            return str(data["name"])
+    except (OSError, json.JSONDecodeError, TypeError):
+        pass
+    return root.name
 
 
-if __name__ == "__main__":
-    print(json.dumps(resolve_swarm_context(), indent=2))
+def adapt_glob_pattern(pattern: str, ctx: Dict[str, Any]) -> str:
+    """Rewrite force-app/... globs to the project's actual package root (e.g. Master/)."""
+    pkg = ctx.get("sourcePackageRoot") or "force-app"
+    if pattern.startswith("force-app/") and pkg != "force-app":
+        return pkg + pattern[len("force-app") :]
+    return pattern
+

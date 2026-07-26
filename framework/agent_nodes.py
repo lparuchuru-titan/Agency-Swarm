@@ -840,6 +840,41 @@ Produce:
     return {"phase": "admin_done", "artifacts": outcomes}
 
 
+
+def run_review_team(state: Dict[str, Any]) -> Dict[str, Any]:
+    """PR / change-set review gate (no implementation)."""
+    run_id = state["run_id"]
+    mark_team_phase(run_id, "review", "reviewing", "review_team")
+    ctx = get_runtime()
+    outcomes: List[Dict[str, Any]] = []
+    agents = _agents_for_team_ids("review", state.get("assigned_agents", []))
+    if not agents:
+        agents = [a for a in AGENTS if a.get("id") == "pr-reviewer"] or agents_for_team("review")
+
+    for agent in agents:
+        update_agent(run_id, agent["id"], {"status": "running", "started_at": _now(), "team_id": "review"})
+        append_activity(run_id, agent["id"], "Running structured code review…")
+        skill = _read_skill((agent.get("skills") or ["advanced-salesforce-developer"])[0])
+        prompt = f"""You are a Salesforce PR reviewer for project {ctx.get('projectName','—')}.
+{skill}
+
+REQUEST: {state['user_input']}
+
+Produce a structured review with:
+1. Decision: APPROVE | REQUEST CHANGES | BLOCK
+2. Findings by severity (Critical / Major / Minor)
+3. Apex/LWC/Flow/Metadata checklist notes
+4. Required follow-ups before deploy
+
+Do not implement changes — review only."""
+        output = _invoke_cursor_agent(run_id, agent["id"], prompt)
+        path = _write_artifact(run_id, f"REVIEW-{agent['id']}.md", output)
+        update_agent(run_id, agent["id"], {"status": "done", "ended_at": _now(), "summary": path, "note_path": path})
+        outcomes.append({"agent": agent["id"], "artifact": path})
+
+    return {"phase": "review_done", "artifacts": outcomes}
+
+
 def run_qa_team(state: Dict[str, Any]) -> Dict[str, Any]:
     run_id = state["run_id"]
     mark_team_phase(run_id, "qa", "testing", "qa_team")

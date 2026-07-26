@@ -276,10 +276,10 @@ def cmd_dev_schedule(_: argparse.Namespace) -> None:
         time.sleep(30)
 
 
-def main() -> None:
-    init_runtime(force=True)
-    ensure_dirs()
-    parser = argparse.ArgumentParser(description="SFDC Knowledge Swarm + Agent Fleet")
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Agency-Swarm — Salesforce multi-agent CLI (FleetView, orchestrator, skill refresh)",
+    )
     sub = parser.add_subparsers(dest="cmd")
 
     sub.add_parser("fleet", help="Print fleet snapshot").set_defaults(func=cmd_fleet)
@@ -346,10 +346,31 @@ def main() -> None:
         func=cmd_agency_sync
     )
 
+    return parser
+
+
+def main() -> None:
+    parser = build_parser()
     args = parser.parse_args()
     if not args.cmd:
         parser.print_help()
         sys.exit(1)
+
+    # Resolve project context only after argparse (so --help works anywhere).
+    try:
+        init_runtime(force=True)
+        ensure_dirs()
+    except FileNotFoundError as exc:
+        console.print(f"[red]{exc}[/]")
+        console.print(
+            "[dim]Run from a Salesforce DX project (folder with sfdx-project.json), "
+            "or set SFDC_SWARM_PROJECT_ROOT.[/]"
+        )
+        sys.exit(2)
+    except Exception as exc:  # noqa: BLE001
+        console.print(f"[red]Failed to resolve project context:[/] {exc}")
+        sys.exit(2)
+
     args.func(args)
 
 

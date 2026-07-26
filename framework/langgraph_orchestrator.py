@@ -17,6 +17,7 @@ from agent_nodes import (
     run_qa_team,
     run_requirements_team,
     run_research_team,
+    run_review_team,
     run_training_team,
 )
 from agents_registry import AGENTS, agents_for_team, GRAPH_NODES
@@ -52,13 +53,14 @@ NODE_MAP = {
     "design_team": run_design_team,
     "development_team": run_development_team,
     "admin_team": run_admin_team,
+    "review_team": run_review_team,
     "qa_team": run_qa_team,
     "documentation_team": run_documentation_team,
     "training_team": run_training_team,
 }
 
 _TEAM_IDS = frozenset(
-    {"requirements", "research", "design", "development", "admin", "qa", "documentation", "training"}
+    {"requirements", "research", "design", "development", "admin", "review", "qa", "documentation", "training"}
 )
 
 

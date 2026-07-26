@@ -12,6 +12,12 @@ TEAMS: List[Dict[str, Any]] = [
         "color": "#22d3ee",
     },
     {
+        "id": "requirements",
+        "name": "Requirements & Research",
+        "description": "Jira, Confluence, Drive/Sheets requirement gathering",
+        "color": "#f9a8d4",
+    },
+    {
         "id": "research",
         "name": "Research & RAG",
         "description": "KB, Jira/Confluence indexes, codebase context before implementation",
@@ -34,6 +40,12 @@ TEAMS: List[Dict[str, Any]] = [
         "name": "Salesforce Admin",
         "description": "Metadata, FLS, flows, manifests, promotion",
         "color": "#34d399",
+    },
+    {
+        "id": "review",
+        "name": "Code Review",
+        "description": "PR/diff review gate before promotion",
+        "color": "#f43f5e",
     },
     {
         "id": "qa",
@@ -224,9 +236,20 @@ AGENTS: List[Dict[str, Any]] = [
         "role": "implement",
         "skills": ["sfdc-promotion-workflow"],
         "cursor_agent": "sfdc-promotion-workflow",
-        "intents": ["promote", "deploy", "uat", "release", "sfdc-crm-sfdx"],
+        "intents": ["promote", "deploy", "uat", "release", "promotion"],
         "kb_topics": ["codebase/promotion-manifest"],
-        "description": "Sandbox → SFDC-CRM-SFDX promotion, runbooks, manual steps",
+        "description": "Sandbox → higher-environment promotion, runbooks, manual steps",
+    },
+    # --- Review ---
+    {
+        "id": "pr-reviewer",
+        "name": "PR Reviewer",
+        "team": "review",
+        "role": "review",
+        "skills": ["advanced-salesforce-developer"],
+        "cursor_agent": "advanced-salesforce-developer",
+        "intents": ["review", "pr", "diff", "approve", "request changes", "code review"],
+        "description": "Structured review of Apex, LWC, Flow, and metadata changes with a clear deploy decision",
     },
     # --- QA ---
     {
@@ -282,6 +305,7 @@ GRAPH_NODES: List[Dict[str, Any]] = [
     {"id": "design_team", "label": "Design", "phase": "Architect"},
     {"id": "development_team", "label": "Development", "phase": "Implement"},
     {"id": "admin_team", "label": "Admin", "phase": "Metadata"},
+    {"id": "review_team", "label": "Review", "phase": "Review"},
     {"id": "qa_team", "label": "QA", "phase": "Test"},
     {"id": "documentation_team", "label": "Documentation", "phase": "Document"},
     {"id": "training_team", "label": "Training", "phase": "Train KB"},

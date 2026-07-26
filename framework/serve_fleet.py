@@ -21,6 +21,9 @@ class FleetHandler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         path = self.path.split("?", 1)[0]
+        if path == "/api/health":
+            self._json({"ok": True, "service": "agency-swarm-fleetview"})
+            return
         if path == "/api/context":
             from config import get_runtime
 

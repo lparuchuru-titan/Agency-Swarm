@@ -16,6 +16,7 @@ VALID_TEAM_NODES = frozenset(
         "design_team",
         "development_team",
         "admin_team",
+        "review_team",
         "qa_team",
         "documentation_team",
         "training_team",
