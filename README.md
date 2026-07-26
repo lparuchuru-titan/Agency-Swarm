@@ -151,7 +151,7 @@ python3 tests/test_framework.py
 ./scripts/validate-e2e.sh
 ```
 
-CI runs the same suite on every push via `.github/workflows/validate.yml`.
+CI template: copy `docs/ci/github-actions-validate.yml` to `.github/workflows/validate.yml` (requires a GitHub token with `workflow` scope).
 
 ## License
 
