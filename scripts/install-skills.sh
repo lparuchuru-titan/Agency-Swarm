@@ -13,6 +13,10 @@ SKILLS=(
   playwright-e2e-validation
   codebase-explainer
   sfdc-cta-mentor
+  pr-reviewer
+  org-analyst
+  reverse-engineer
+  apex-space-reclaimer
 )
 
 mkdir -p "$DEST"

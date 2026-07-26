@@ -163,7 +163,10 @@ This installs:
 
 - `~/.cursor/sfdc-knowledge-swarm` — framework copy
 - `~/.local/bin/sfdc-swarm` — CLI
-- `~/.cursor/skills/*` — specialist skills
+- `~/.cursor/skills/*` — specialist skills:
+  - `advanced-salesforce-developer`, `sfdc-metadata-sync`, `sfdc-promotion-workflow`
+  - `jira-subtask-workflow`, `playwright-e2e-validation`, `codebase-explainer`, `sfdc-cta-mentor`
+  - `pr-reviewer`, `org-analyst`, `reverse-engineer`, `apex-space-reclaimer`
 
 ### 2. Wire into a Salesforce DX project
 

@@ -21,6 +21,10 @@ CURSOR_AGENTS: List[Dict[str, str]] = [
     {"folder": "sfdc-cta-mentor", "cursor_id": "sfdc-cta-mentor", "name": "Technical Architect", "description": "Architecture blueprints and trade-offs"},
     {"folder": "codebase-explainer", "cursor_id": "codebase-explainer", "name": "Documenter", "description": "Deep dives, HTML explainers"},
     {"folder": "playwright-e2e-validation", "cursor_id": "qa-playwright", "name": "QA Engineer", "description": "Playwright E2E and regression"},
+    {"folder": "pr-reviewer", "cursor_id": "pr-reviewer", "name": "PR Reviewer", "description": "APPROVE / REQUEST CHANGES / BLOCK gate"},
+    {"folder": "org-analyst", "cursor_id": "org-analyst", "name": "Org Analyst", "description": "Org health, security, technical debt"},
+    {"folder": "reverse-engineer", "cursor_id": "reverse-engineer", "name": "Reverse Engineer", "description": "BRD, ERD, data dictionary from metadata"},
+    {"folder": "apex-space-reclaimer", "cursor_id": "apex-space-reclaimer", "name": "Apex Space Reclaimer", "description": "Unused Apex reclaim analysis"},
 ]
 
 

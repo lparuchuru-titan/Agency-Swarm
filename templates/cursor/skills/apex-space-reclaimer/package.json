@@ -1,0 +1,17 @@
+{
+  "name": "apex-space-reclaimer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Read-only Salesforce Apex character-limit reclaim analyzer (UAT-preferred).",
+  "scripts": {
+    "analyze": "node scripts/analyze.mjs -o UAT --current-pct 92 --target-pct 75",
+    "analyze:uat": "node scripts/analyze.mjs -o UAT --current-pct 92 --target-pct 75",
+    "analyze:production": "node scripts/analyze.mjs -o Production --current-pct 92 --target-pct 75",
+    "analyze:your-project": "node scripts/analyze.mjs -o your sandbox --current-pct 92 --target-pct 75",
+    "check:pr": "node scripts/check-pr-apex-size.mjs --soft"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

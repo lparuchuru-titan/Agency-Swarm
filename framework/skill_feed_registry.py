@@ -115,6 +115,16 @@ SKILL_FEEDS: Dict[str, Dict[str, List[str]]] = {
         "connected": ["confluence-index.md", "gdrive-gsheets-index.md"],
         "project": [],                    # retrieves metadata from live org at runtime
     },
+    "apex-space-reclaimer": {
+        "open_topics": [
+            "governor-limits",
+            "testing-deployment",
+            "apex-design-patterns",
+        ],
+        "codebase": [],
+        "connected": [],
+        "project": [],
+    },
     "pr-reviewer": {
         "open_topics": [
             # Dedicated code-review topics

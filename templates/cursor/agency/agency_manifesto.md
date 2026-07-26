@@ -27,4 +27,4 @@ Ship correct, bulkified, secure Salesforce changes that match existing repo patt
 
 ## Promotion context
 
-Sandbox work promotes to `SFDC-CRM-SFDX` per `sfdc-promotion-workflow` skill and `.cursor/sfdc-promotion/`.
+Sandbox work promotes to your promotion repo (configure path in project context) per `sfdc-promotion-workflow` skill and `.cursor/sfdc-promotion/`.

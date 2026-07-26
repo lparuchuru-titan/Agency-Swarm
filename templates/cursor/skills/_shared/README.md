@@ -39,7 +39,7 @@ Only set values you need to override:
 | Field | When to set |
 |-------|-------------|
 | `targetOrgAlias` | Force a specific org instead of project default |
-| `promotionRepoRoot` | If SFDC-CRM-SFDX is not a sibling folder |
+| `promotionRepoRoot` | If the promotion repo is not a sibling folder |
 | `parentStoryKey` | Current Jira story for subtask tracking |
 | `defaultBaseBranch` | Promotion repo base branch |
 
@@ -47,7 +47,7 @@ Only set values you need to override:
 
 | Variable | Purpose |
 |----------|---------|
-| `SFDC_PROMOTION_REPO` | Path to SFDC-CRM-SFDX when not auto-found |
+| `SFDC_PROMOTION_REPO` | Path to the promotion repo when not auto-found |
 
 ## Agent rule
 

@@ -28,3 +28,14 @@ Built by the SFDC Knowledge Swarm (Claude Code / Cursor SDK, no API key required
 | Lightning Web Components | [sfdc/lwc-fundamentals.md](sfdc/lwc-fundamentals.md) | written |
 | Security, Sharing & FLS | [sfdc/security-sharing.md](sfdc/security-sharing.md) | partial |
 | Testing & Deployment (SFDX/CI) | [sfdc/testing-deployment.md](sfdc/testing-deployment.md) | partial |
+| Apex Code Review Checklist | [sfdc/apex-code-review.md](sfdc/apex-code-review.md) | partial |
+| Data Modelling | [sfdc/data-modelling.md](sfdc/data-modelling.md) | partial |
+| Flow Review Checklist | [sfdc/flow-review.md](sfdc/flow-review.md) | partial |
+| LWC Code Review | [sfdc/lwc-code-review.md](sfdc/lwc-code-review.md) | partial |
+| Metadata Model | [sfdc/metadata-model.md](sfdc/metadata-model.md) | partial |
+| Org Health Assessment | [sfdc/org-health-assessment.md](sfdc/org-health-assessment.md) | partial |
+| Permission Model | [sfdc/permission-model.md](sfdc/permission-model.md) | partial |
+| Platform Events & CDC | [sfdc/platform-events-cdc.md](sfdc/platform-events-cdc.md) | partial |
+| Salesforce Releases | [sfdc/salesforce-releases.md](sfdc/salesforce-releases.md) | partial |
+| Security Vulnerability Scanning | [sfdc/security-vulnerability-scanning.md](sfdc/security-vulnerability-scanning.md) | partial |
+| Well-Architected Framework | [sfdc/well-architected.md](sfdc/well-architected.md) | partial |

@@ -41,6 +41,7 @@ def run(cmd, cwd=None, env=None, timeout=120):
     # Force offline routing / no accidental LLM calls in CI
     e.pop("CURSOR_API_KEY", None)
     e.pop("ANTHROPIC_API_KEY", None)
+    e.pop("SFDC_SWARM_PROJECT_ROOT", None)
     if env:
         e.update(env)
     return subprocess.run(
@@ -465,6 +466,10 @@ def test_templates():
         "sfdc-cta-mentor.md",
         "codebase-explainer.md",
         "playwright-e2e-validation.md",
+        "pr-reviewer.md",
+        "org-analyst.md",
+        "reverse-engineer.md",
+        "apex-space-reclaimer.md",
     ]
     for name in required_agents:
         if (agents_dir / name).is_file():
@@ -481,6 +486,10 @@ def test_templates():
         "sfdc-cta-mentor",
         "codebase-explainer",
         "playwright-e2e-validation",
+        "pr-reviewer",
+        "org-analyst",
+        "reverse-engineer",
+        "apex-space-reclaimer",
     ]:
         inst = agency_dir / folder / "instructions.md"
         if inst.is_file() and "NEXTGEN2" not in inst.read_text() and "/Users/" not in inst.read_text():

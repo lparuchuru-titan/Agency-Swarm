@@ -1,0 +1,81 @@
+# Copy into your-org (or any DX repo) as:
+#   .github/workflows/apex-size-gate.yml
+#
+# Alerts on PRs that add large Apex files / large net character growth.
+# Pair with weekly Production inventory via tools/apex-space-reclaimer.
+
+name: Apex size gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - 'Master/main/default/classes/**'
+      - 'Master/main/default/triggers/**'
+      - 'force-app/**/classes/**'
+      - 'force-app/**/triggers/**'
+      - '**/classes/**/*.cls'
+      - '**/triggers/**/*.trigger'
+
+jobs:
+  apex-size:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Fetch base branch
+        run: git fetch origin ${{ github.base_ref }} --depth=1
+
+      - name: Run Apex size gate
+        id: gate
+        # soft=true → never fail the PR; comment/summary only. Flip soft off to enforce.
+        run: |
+          node tools/apex-space-reclaimer/scripts/check-pr-apex-size.mjs \
+            --base origin/${{ github.base_ref }} \
+            --warn-file 50000 \
+            --fail-file 100000 \
+            --warn-delta 75000 \
+            --fail-delta 150000 \
+            --soft \
+            --out /tmp/apex-size.md
+        continue-on-error: true
+
+      - name: PR comment
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('/tmp/apex-size.md', 'utf8');
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const marker = '## Apex size gate';
+            const existing = comments.find(c => c.user.type === 'Bot' && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }

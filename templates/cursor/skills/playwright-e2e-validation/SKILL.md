@@ -52,7 +52,7 @@ Optional per-project config: `.cursor/playwright-e2e/config.json` (copy from `co
 python3 ~/.cursor/skills/playwright-e2e-validation/scripts/scaffold.py
 ```
 
-Creates `playwright.config.js`, `e2e/auth.setup.js`, `e2e/home.spec.js` (matches SFDC-CRM-SFDX pattern).
+Creates `playwright.config.js`, `e2e/auth.setup.js`, `e2e/home.spec.js` (matches a typical SFDX e2e layout).
 
 ### Step 3 — Generate Playwright specs from changes
 

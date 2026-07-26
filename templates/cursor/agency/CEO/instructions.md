@@ -17,10 +17,14 @@ Read `.cursor/agency/agency_chart.md`. You may delegate to any specialist below 
 
 | Specialist | Folder | When to use |
 | --- | --- | --- |
+| Org Analyst | `org-analyst/` | Org health, security audit, technical debt, release readiness |
+| Reverse Engineer | `reverse-engineer/` | BRD, ERD, data dictionary, onboarding from metadata |
 | Jira Analyst | `jira-subtask-workflow/` | Stories, epics, acceptance criteria |
 | Technical Architect | `sfdc-cta-mentor/` | Design, architecture, trade-offs |
 | Salesforce Developer | `advanced-salesforce-developer/` | Apex, LWC, CPQ implementation |
 | Metadata Sync | `sfdc-metadata-sync/` | Retrieve, manifests, org sync |
+| Apex Space Reclaimer | `apex-space-reclaimer/` | Unused/stale Apex reclaim analysis (read-only) |
+| PR Reviewer | `pr-reviewer/` | APPROVE / REQUEST CHANGES / BLOCK before deploy |
 | Promotion Engineer | `sfdc-promotion-workflow/` | Deploy, promote, UAT |
 | Documenter | `codebase-explainer/` | HTML explainers, change docs |
 | QA Engineer | `playwright-e2e-validation/` | E2E, regression |

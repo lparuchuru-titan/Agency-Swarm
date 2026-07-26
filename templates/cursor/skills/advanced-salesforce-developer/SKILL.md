@@ -68,4 +68,4 @@ See [reference.md](reference.md) for:
 ## Related skills
 
 - `sfdc-metadata-sync` — metadata retrieve/sync
-- `sfdc-promotion-workflow` — sandbox promotion to SFDC-CRM-SFDX
+- `sfdc-promotion-workflow` — sandbox promotion to your promotion repo
