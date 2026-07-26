@@ -24,7 +24,7 @@ python3 ~/.cursor/skills/_shared/show-context.py
 - `SF_USERNAME` / `SF_PASSWORD` for that sandbox instance
 - Source path from `sfdx-project.json` for detecting changed LWCs/Apex
 
-**Agent:** Scaffold and validate in whichever DX project folder is active — do not assume NEXTGEN2 or a fixed path.
+**Agent:** Scaffold and validate in whichever DX project folder is active — do not assume a fixed project name or path.
 
 Global skill paths:
 - **Cursor:** `~/.cursor/skills/playwright-e2e-validation/`
@@ -102,11 +102,11 @@ npm run test:e2e
 | `lightning__RecordPage` | `/lightning/r/{Object}/{recordId}/view` |
 | App / Home page | Start at `/lightning/page/home` + TODO navigate |
 
-Component selector: `c-{kebab-case-lwc-name}` (e.g. `pantheonBundleQuoteLineView` → `c-pantheon-bundle-quote-line-view`).
+Component selector: `c-{kebab-case-lwc-name}` (e.g. `myQuoteLineView` → `c-my-quote-line-view`).
 
 ## Salesforce E2E auth (team standard)
 
-Matches `SFDC-CRM-SFDX/e2e/auth.setup.js`:
+Matches your production metadata repo's `e2e/auth.setup.js`:
 - Setup project runs first, saves `e2e/.auth/user.json`
 - Chromium project depends on setup
 - Instance URL saved to `e2e/.auth/instance-url.txt`

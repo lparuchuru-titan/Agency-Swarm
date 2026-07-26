@@ -18,7 +18,7 @@ All global skills resolve **project folder** and **sandbox org** automatically f
 | 3 | `.cursor/sfdc-project/config.json` override |
 | 4 | `sf config get target-org` fallback |
 
-Each sandbox folder (NEXTGEN2, LQDEV, QA, UAT) has its own `.sf/config.json`. Skills always pick **that project's** default org.
+Each sandbox folder (e.g. DEV, QA, UAT) has its own `.sf/config.json`. Skills always pick **that project's** default org.
 
 
 ## Show context (run from any subfolder of a DX project)
@@ -56,7 +56,7 @@ Before any skill runs deploy/retrieve/sync/promotion/jira:
 1. `cd` to the user's **active sandbox project folder** (where `sfdx-project.json` lives)
 2. Run `show-context.py` or let skill scripts auto-resolve
 3. Use resolved `targetOrgAlias` in all `sf` commands (`--target-org`)
-4. Never assume NEXTGEN2 or hardcoded paths unless user explicitly names them
+4. Never assume a specific org alias or hardcoded paths unless user explicitly names them
 
 ## Skills using shared context
 

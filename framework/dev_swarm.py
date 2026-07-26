@@ -126,10 +126,10 @@ def kb_catalog() -> Dict[str, Any]:
 
     sfdc_keys = [{"key": t["key"], "title": t["title"], "team": "salesforce-dev"} for t in TOPICS]
     codebase = kb_topic_status()
-    nextgen2 = _cat_status(PROJECT_NOTES_DIR, project_topics(), "project")
+    project_notes = _cat_status(PROJECT_NOTES_DIR, project_topics(), "project")
     sfdc = _cat_status(SFDC_NOTES_DIR, sfdc_keys, "sfdc")
 
-    all_rows = codebase + nextgen2 + sfdc
+    all_rows = codebase + project_notes + sfdc
     written = sum(1 for r in all_rows if r["status"] == "written")
     return {
         "total": len(all_rows),
@@ -138,8 +138,7 @@ def kb_catalog() -> Dict[str, Any]:
         "percent": int(100 * written / len(all_rows)) if all_rows else 0,
         "categories": {
             "codebase": _summary(codebase),
-            "nextgen2": _summary(nextgen2),
-            "project": _summary(nextgen2),
+            "project": _summary(project_notes),
             "sfdc": _summary(sfdc),
         },
         "topics": all_rows,

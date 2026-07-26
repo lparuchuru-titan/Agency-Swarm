@@ -1,6 +1,6 @@
 # Multi-Agent Orchestrator Architecture
 
-LangGraph supervisor pattern for the NEXTGEN2 Salesforce dev swarm, aligned with LangGraph multi-agent docs (supervisor routes workers, shared state, conditional edges).
+LangGraph supervisor pattern for the Salesforce dev swarm, aligned with LangGraph multi-agent docs (supervisor routes workers, shared state, conditional edges).
 
 ## Multi-project (all Cursor Salesforce repos)
 
@@ -24,7 +24,7 @@ cd any-sfdc-project && sfdc-swarm context
 
 Optional per project: `.cursor/swarm/project-topics.json` for project-specific KB stubs.
 
-Scheduled refresh for **all projects**: `launchd/com.servicetitan.skill-refresh-all.plist`
+Scheduled refresh for **all projects**: `launchd/com.agency-swarm.skill-refresh-all.plist`
 
 ## Two modes
 
@@ -79,7 +79,7 @@ The LangGraph layer is the **orchestration and planning plane**:
 
 ### Typical flow
 
-1. User: `orchestrate "Implement Pantheon bundle view for SFDCLQ-7591"`
+1. User: `orchestrate "Implement quote line editor view for PROJ-1234"`
 2. Orchestrator writes `work-apex-developer.md`, `work-ui-developer.md`, etc.
 3. User opens Cursor, launches `advanced-salesforce-developer` with the work order.
 4. MCP agents pull Jira/Confluence/Drive when requirements team briefs say so.

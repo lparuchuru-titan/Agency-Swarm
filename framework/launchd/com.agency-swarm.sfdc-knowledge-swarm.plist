@@ -3,11 +3,11 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.servicetitan.sfdc-knowledge-swarm</string>
+    <string>com.agency-swarm.sfdc-knowledge-swarm</string>
 
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/tools/sfdc-knowledge-swarm/launchd/run-swarm.sh</string>
+        <string>/path/to/your-sfdx-project/tools/sfdc-knowledge-swarm/launchd/run-swarm.sh</string>
     </array>
 
     <!-- Weekly: Sunday 02:07 local. Edit Weekday/Hour/Minute to taste. -->
@@ -26,8 +26,8 @@
     <false/>
 
     <key>StandardOutPath</key>
-    <string>/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/tools/sfdc-knowledge-swarm/swarm.launchd.out.log</string>
+    <string>/path/to/your-sfdx-project/tools/sfdc-knowledge-swarm/swarm.launchd.out.log</string>
     <key>StandardErrorPath</key>
-    <string>/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/tools/sfdc-knowledge-swarm/swarm.launchd.err.log</string>
+    <string>/path/to/your-sfdx-project/tools/sfdc-knowledge-swarm/swarm.launchd.err.log</string>
 </dict>
 </plist>

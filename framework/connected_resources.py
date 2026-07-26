@@ -55,7 +55,7 @@ def _jira_rest_search(jql: str, max_results: int) -> List[Dict[str, Any]]:
 def refresh_jira_index() -> Dict[str, Any]:
     """Index recent Jira issues by project — REST only, no LLM."""
     ctx = get_runtime()
-    projects = [ctx.get("jiraProjectKey") or ctx.get("jiraPrefix") or "SFDCLQ"]
+    projects = [ctx.get("jiraProjectKey") or ctx.get("jiraPrefix") or "PROJ"]
     projects = [p.strip() for p in projects if p and str(p).strip()]
     jql = " OR ".join(f"project = {p}" for p in projects) if projects else "updated >= -30d"
     if projects:

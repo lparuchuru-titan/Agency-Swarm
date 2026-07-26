@@ -2,7 +2,7 @@
 # Scheduled Dev Development Swarm — codebase KB for all three teams (no API key required).
 set -euo pipefail
 
-REPO="/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2"
+REPO="${AGENCY_SWARM_PROJECT_REPO:-/path/to/your-sfdx-project}"
 LOG="$REPO/tools/sfdc-knowledge-swarm/dev-swarm.log"
 cd "$REPO/tools/sfdc-knowledge-swarm"
 

@@ -7,7 +7,7 @@ Salesforce CPQ (originally SteelBrick, acquired by Salesforce in 2015) is a mana
 
 For developers, the two main extension surfaces are the **Calculate Quote API** (server-side, Apex/REST, operating on a `QuoteModel` JSON) and the **JavaScript Quote Calculator Plugin (QCP)** (client-side hooks in the Quote Line Editor). Both operate on the in-memory `QuoteModel` / `QuoteLineModel` representation rather than directly on SObjects during calculation.
 
-This note is directly relevant to the **Pantheon Max Bundles** project: bundle structure, product/price rules, lookup data, and how the calculation pipeline fires.
+This note is directly relevant to any CPQ bundle project: bundle structure, product/price rules, lookup data, and how the calculation pipeline fires.
 
 ## Key concepts
 

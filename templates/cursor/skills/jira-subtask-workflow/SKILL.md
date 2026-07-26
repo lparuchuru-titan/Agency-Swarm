@@ -5,7 +5,7 @@ description: >-
   PDS QCP, PDS Manual) for Salesforce stories. Tracks metadata pushed to sandbox
   in Dev Task and manual/data steps in PDS for DevOps promotion. Use when working
   on a Jira story, deploying to sandbox, preparing promotion, or when the user
-  asks to update Dev Task or PDS subtasks for SFDCLQ tickets.
+  asks to update Dev Task or PDS subtasks for project tickets.
 ---
 
 # Jira Subtask Workflow
@@ -16,21 +16,21 @@ Global skill:
 - **Cursor:** `~/.cursor/skills/jira-subtask-workflow/`
 - **Claude:** `~/.claude/skills/jira-subtask-workflow/`
 
-## Team patterns (from SFDCLQ examples)
+## Team patterns (example — adapt to your Jira project)
 
 | Parent type | Example | Subtasks created |
 |-------------|---------|------------------|
-| Product / Story | [SFDCLQ-7302](https://servicetitan.atlassian.net/browse/SFDCLQ-7302) | Dev Task + PDS variants |
-| Dev Task + metadata | [SFDCLQ-4462](https://servicetitan.atlassian.net/browse/SFDCLQ-4462) | Deploy manifest, components, validation |
-| PDS (Data) | [SFDCLQ-4646](https://servicetitan.atlassian.net/browse/SFDCLQ-4646) | Apex scripts, seed data, LookupData |
-| PDS (QCP) | [SFDCLQ-4461](https://servicetitan.atlassian.net/browse/SFDCLQ-4461) | CPQ / quote calculator manual steps |
+| Product / Story | `PROJ-1001` | Dev Task + PDS variants |
+| Dev Task + metadata | `PROJ-1002` | Deploy manifest, components, validation |
+| PDS (Data) | `PROJ-1003` | Apex scripts, seed data, LookupData |
+| PDS (QCP) | `PROJ-1004` | CPQ / quote calculator manual steps |
 
 ### What goes where
 
 | Bucket | Goes in subtask | Examples |
 |--------|-----------------|----------|
 | **Dev Task** | Metadata in git / manifest deploy | Apex, LWC, fields, objects, permission sets, layouts, tabs, profiles |
-| **PDS (Data)** | Per-org data — **never copy record IDs** | `scripts/apex/*.apex`, `SBQQ__LookupData__c`, `Bundle_Definition__c`, Product2 seed |
+| **PDS (Data)** | Per-org data — **never copy record IDs** | `scripts/apex/*.apex`, `SBQQ__LookupData__c`, junction/config object seed data |
 | **PDS (Permissions & Layout)** | Post-deploy manual checks + profile/layout deploy notes | FLS verification, tab visibility, perm set assignment |
 | **PDS (QCP)** | CPQ-specific manual steps | Quote lines, product rules, QCP calculator |
 | **PDS (Manual Steps)** | Finance pricing, open decisions, onboarding | Runbook section C items |
@@ -40,15 +40,15 @@ Global skill:
 ```bash
 mkdir -p .cursor/jira-subtasks
 cp ~/.cursor/skills/jira-subtask-workflow/config.example.json .cursor/jira-subtasks/config.json
-# Edit parentStoryKey, sandbox org
+# Edit parentStoryKey, sandbox org, Jira project key
 ```
 
 ### Jira API (optional — for auto push)
 
 ```bash
-export JIRA_EMAIL='you@servicetitan.com'
+export JIRA_EMAIL='you@yourcompany.com'
 export JIRA_API_TOKEN='...'   # Atlassian API token
-export JIRA_BASE_URL='https://servicetitan.atlassian.net'
+export JIRA_BASE_URL='https://yourcompany.atlassian.net'
 ```
 
 Without credentials, the skill still updates **local tracker + markdown** for copy-paste into Jira.
@@ -58,7 +58,7 @@ Without credentials, the skill still updates **local tracker + markdown** for co
 ### 1. Start work on a story
 
 ```bash
-python3 ~/.cursor/skills/jira-subtask-workflow/scripts/init-story.py SFDCLQ-7592 --push
+python3 ~/.cursor/skills/jira-subtask-workflow/scripts/init-story.py PROJ-1001 --push
 ```
 
 Creates tracker + Jira subtasks (if `--push` and credentials set):
@@ -73,8 +73,8 @@ Creates tracker + Jira subtasks (if `--push` and credentials set):
 
 ```bash
 python3 ~/.cursor/skills/jira-subtask-workflow/scripts/sync-from-work.py \
-  --deploy-command "sf project deploy start --manifest manifest/pantheon_cpq_deploy.xml --target-org NEXTGEN2" \
-  --ticket SFDCLQ-7592 \
+  --deploy-command "sf project deploy start --manifest manifest/my_deploy.xml --target-org MY_SANDBOX" \
+  --ticket PROJ-1001 \
   --push
 ```
 
@@ -103,17 +103,15 @@ python3 ~/.cursor/skills/jira-subtask-workflow/scripts/status.py
 **Cursor** — **`atlassian`** MCP (OAuth in Settings). **Claude Code** — built-in Atlassian connector.
 
 Use create/edit issue tools with:
-- `projectKey: "SFDCLQ"`, `issueTypeName: "Sub-task"` (id 5), `parent: "<story key>"`
+- `projectKey: "<YOUR_PROJECT_KEY>"`, `issueTypeName: "Sub-task"`, `parent: "<story key>"`
 - `contentFormat: "markdown"` — **GFM tables render** in Jira; always use tables (see templates below).
-- **REQUIRED custom field** on create: `additional_fields: {"customfield_15121": {"value": "No"}}` — this is *"Needs Enablement?"* and creation 400s without it.
-- Summaries are exactly `Dev Task` and `PDS` (the team's convention; not "Dev Task — …").
-
-Live reference (Pantheon 7592–7595): Dev Tasks SFDCLQ-7657/7659/7661/7656, PDS SFDCLQ-7658/7660/7662/7655.
+- Some Jira instances require additional custom fields on create (e.g. an "Enablement" flag) — check your project's issue-type field metadata for required custom fields before creating.
+- Summaries follow your team's convention (e.g. exactly `Dev Task` and `PDS`, not "Dev Task — …") — confirm with your team.
 
 ## Dev Task template (tabular — Labels + API names)
 
 ```markdown
-## Dev Task — <object> fields (SFDCLQ-####)
+## Dev Task — <object> fields (PROJ-####)
 
 ### Components (metadata) — object: <Object__c>
 | Field Label | API Name | Type | Default / Picklist values / Notes |
@@ -123,8 +121,8 @@ Live reference (Pantheon 7592–7595): Dev Tasks SFDCLQ-7657/7659/7661/7656, PDS
 ### FLS
 | Permission Set / Profile | Access |
 | --- | --- |
-| OSCPQ CPQ User | Read + Edit |
-| OSCPQ CPQ Admin | Read + Edit |
+| <Custom CPQ User perm set> | Read + Edit |
+| <Custom CPQ Admin perm set> | Read + Edit |
 | System Administrator (profile) | Read + Edit |
 
 ### Layout
@@ -142,7 +140,7 @@ Live reference (Pantheon 7592–7595): Dev Tasks SFDCLQ-7657/7659/7661/7656, PDS
 Lightweight PDS (verify-only) = a single step table. **Data PDS** must give DevOps BOTH delivery options and be self-contained:
 
 ```markdown
-## PDS — <topic> (SFDCLQ-####)
+## PDS — <topic> (PROJ-####)
 
 | Expected result | Count |
 | --- | --- |
@@ -180,8 +178,8 @@ Lightweight PDS (verify-only) = a single step table. **Data PDS** must give DevO
 **Rules for the data PDS:**
 - Inline the **full** Apex script (DevOps may not have repo access); keep a matching real file in `scripts/apex/...`.
 - Generate CSV sheets in `scripts/data/...`, then create real **Google Sheets** so they can be linked on the ticket: `create_file` (Google Drive MCP) with `contentMimeType: "text/csv"` + `textContent: <csv>` → auto-converts `text/csv` to a Google Sheet; put the returned `viewUrl` in the Option B table. (No Jira attachment API is available via MCP — link Google Sheets instead.) Note the sheet owner so DevOps can request access.
-- **Never put org-specific record Ids in the ticket** — the script/sheets use ProductCode and resolve ProductCode→Id in the target org. When exporting org data to a sheet, resolve stored Ids back to ProductCode (build the Id→Code map keyed by BOTH 18- and 15-char Ids, since `Auto_Add_Products__c` stores 15-char Ids).
-- Data load on junction/config objects with no External Id (e.g. `Bundle_Definition__c`, `SBQQ__LookupData__c`) uses **scoped delete + insert** (delete only rows for the parents in scope, then insert the full desired set) — idempotent and re-runnable; row Ids change each run, which is fine because nothing references them by Id.
+- **Never put org-specific record Ids in the ticket** — the script/sheets use ProductCode and resolve ProductCode→Id in the target org. When exporting org data to a sheet, resolve stored Ids back to ProductCode (build the Id→Code map keyed by both 18- and 15-char Ids if your org stores 15-char Ids anywhere).
+- Data load on junction/config objects with no External Id uses **scoped delete + insert** (delete only rows for the parents in scope, then insert the full desired set) — idempotent and re-runnable; row Ids change each run, which is fine because nothing references them by Id.
 
 ## Integration with other skills
 
@@ -189,7 +187,7 @@ Lightweight PDS (verify-only) = a single step table. **Data PDS** must give DevO
 |-------|----------|
 | Sandbox deploy | `sfdc-promotion-workflow` track-deploy → then `sync-from-work.py` |
 | Prepare commit | Sync Jira before `prepare-feature-branch.py` |
-| Pantheon runbook | Mirror sections A→Dev Task, B→PDS Data, C→PDS Manual |
+| Multi-part runbook | Mirror sections A→Dev Task, B→PDS Data, C→PDS Manual |
 
 ## Local files (per project)
 
@@ -223,7 +221,7 @@ When implementing a Jira story, read **every** acceptance criterion — not only
 | Tabs, apps, record types | respective metadata | — |
 | Data scripts | `scripts/apex/`, `scripts/data/` | PDS not updated |
 
-**Layout rule:** If AC says “add fields to layout”, confirm whether **all** new fields or **only specific types** (e.g. checkboxes only) — quote the story verbatim in Dev Task → Layout section.
+**Layout rule:** If AC says "add fields to layout", confirm whether **all** new fields or **only specific types** (e.g. checkboxes only) — quote the story verbatim in Dev Task → Layout section.
 
 ## Post-dev validation (required when user asks you to develop)
 
@@ -236,8 +234,8 @@ After metadata changes and sandbox deploy, **automatically** run AC validation b
 Project helper (extend per story):
 
 ```bash
-python3 tools/sfdc-knowledge-swarm/validate_jira_ac.py SFDCLQ-7592
-python3 tools/sfdc-knowledge-swarm/validate_jira_ac.py SFDCLQ-7592 --target-org NEXTGEN2
+python3 tools/sfdc-knowledge-swarm/validate_jira_ac.py PROJ-1001
+python3 tools/sfdc-knowledge-swarm/validate_jira_ac.py PROJ-1001 --target-org MY_SANDBOX
 ```
 
 If validation fails, fix gaps before telling the user the story is done.

@@ -3,9 +3,9 @@
 # No API key — uses your existing `claude` authentication.
 set -euo pipefail
 
-REPO="/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2"
+REPO="${AGENCY_SWARM_PROJECT_REPO:-/path/to/your-sfdx-project}"
 LOG="$REPO/tools/sfdc-knowledge-swarm/swarm.log"
-CLAUDE="${CLAUDE_BIN:-/Users/lakshmikanthparuchuru/.local/bin/claude}"
+CLAUDE="${CLAUDE_BIN:-$HOME/.local/bin/claude}"
 
 cd "$REPO"
 echo "===== $(date '+%Y-%m-%d %H:%M:%S') swarm run starting =====" >> "$LOG"

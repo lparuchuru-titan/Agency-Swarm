@@ -55,7 +55,7 @@
 <header class="hero">
   <h1>Building an SFDC Agent Swarm for Cursor</h1>
   <p class="subtitle">How we turned a large Salesforce DX monorepo into a multi-agent agency — with a live FleetView dashboard, token-aware knowledge refresh, and plain-English delegation.</p>
-  <div class="byline">ServiceTitan · NEXTGEN2 · June 2026</div>
+  <div class="byline">Agency-Swarm · June 2026</div>
   <div>
     <span class="pill">Cursor IDE</span>
     <span class="pill">Agency Swarm pattern</span>
@@ -79,7 +79,7 @@
 <p class="lead">If you work on a mature Salesforce org — thousands of Apex classes, CPQ, custom LWCs, Jira epics, and multiple sandboxes — a single AI chat thread stops scaling fast. We built an <b>SFDC Agent Swarm</b>: a CEO-style orchestrator in Cursor, specialist agents with skills, a LangGraph planning pipeline, and a local FleetView dashboard so humans can see what the swarm knows and what it is doing.</p>
 
 <h2 id="problem">The problem we were solving</h2>
-<p>Our NEXTGEN2 repo is a real production-scale Salesforce project: ~1,700 Apex classes, 90+ LWCs, CPQ, billing, provisioning, and a new Pantheon bundle model. Developers were already using Cursor, but:</p>
+<p>A mature Salesforce DX repo is a real production-scale project: thousands of Apex classes, dozens of LWCs, CPQ, billing, and custom product models. Developers were already using Cursor, but:</p>
 <ul class="tight">
   <li>Every session started cold — no shared memory of org context, Jira AC, or repo conventions.</li>
   <li>One agent tried to do everything: Jira, architecture, Apex, deploy, QA, docs.</li>
@@ -162,8 +162,8 @@ flowchart TB
 
 <h3>1. Plain English in Cursor (most common)</h3>
 <p>Open Cursor chat and describe the task like you would to a project lead:</p>
-<pre class="code">Implement Pantheon bundle view for SFDCLQ-7591.
-Retrieve latest catalogModal from NEXTGEN2, match Jira AC, then prepare promotion notes.</pre>
+<pre class="code">Implement quote line editor enhancement for PROJ-1001.
+Retrieve latest LWC from the sandbox, match Jira AC, then prepare promotion notes.</pre>
 <p>The <code>agency-swarm-cursor</code> rule (Apply Intelligently) acts as CEO and delegates to specialists. Editing files under <code>force-app/</code> auto-attaches the Salesforce agency context.</p>
 <p>Force CEO mode anytime: <code>@agency-swarm-cursor</code></p>
 
@@ -252,11 +252,11 @@ knowledge-base/                    # per-project KB output
 </ul>
 
 <h3>Step 5 — Configure org resolution</h3>
-<p>Each project resolves its default org from <code>.sf/config.json</code>. Optional overrides in <code>.cursor/sfdc-project/config.json</code>. The CEO and all skills must call <code>sfdc-swarm context</code> — never hardcode <code>NEXTGEN2</code> or record IDs.</p>
+<p>Each project resolves its default org from <code>.sf/config.json</code>. Optional overrides in <code>.cursor/sfdc-project/config.json</code>. The CEO and all skills must call <code>sfdc-swarm context</code> — never hardcode org aliases or record IDs.</p>
 
 <h3>Step 6 — Optional: scheduled refresh (macOS launchd)</h3>
-<pre class="code">cp tools/sfdc-knowledge-swarm/launchd/com.servicetitan.skill-refresh-daily.plist ~/Library/LaunchAgents/
-launchctl load ~/Library/LaunchAgents/com.servicetitan.skill-refresh-daily.plist</pre>
+<pre class="code">cp framework/launchd/com.agency-swarm.skill-refresh-daily.plist ~/Library/LaunchAgents/
+launchctl load ~/Library/LaunchAgents/com.agency-swarm.skill-refresh-daily.plist</pre>
 <p>Daily = free static scan. Weekly = connected indexes. Monthly = small LLM budget for stale topics only.</p>
 
 <h3>Step 7 — Optional: MCP integrations</h3>
@@ -322,7 +322,7 @@ sequenceDiagram
 
 <footer>
   <p><b>Path:</b> <code>docs/explainers/20260624-sfdc-agent-swarm-blog.html</code></p>
-  <p><b>Repo:</b> NEXTGEN2 · <code>tools/sfdc-knowledge-swarm/</code> · <code>AGENTS.md</code></p>
+  <p><b>Repo:</b> <a href="https://github.com/lparuchuru-titan/Agency-Swarm">Agency-Swarm</a> · <code>framework/</code> · <code>AGENTS.md</code></p>
   <p>Generated 2026-06-24 · SFDC Agent Swarm blog &amp; implementation guide</p>
 </footer>
 

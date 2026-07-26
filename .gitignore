@@ -19,3 +19,7 @@ framework/knowledge-base/skills/sync-state.json
 
 # Local install test copies
 .tmp/
+
+# Runtime logs
+framework/*.log
+framework/fleet-server.*.log

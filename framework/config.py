@@ -40,7 +40,7 @@ SFDC_NOTES_DIR = KB_DIR / "sfdc"
 GLOBAL_SFDC_NOTES_DIR = GLOBAL_KB_DIR / "sfdc"
 CODEBASE_NOTES_DIR = KB_DIR / "codebase"
 PROJECT_NOTES_DIR = KB_DIR / "project"
-NEXTGEN2_NOTES_DIR = KB_DIR / "project"  # alias for legacy imports
+PROJECT_NOTES_DIR_ALIAS = KB_DIR / "project"  # legacy alias kept for older imports
 FLEET_DIR = ROOT / ".fleet"
 FLEET_STATE = FLEET_DIR / "state.json"
 SCHEDULE_STATE = FLEET_DIR / "schedule.json"
@@ -326,7 +326,7 @@ def init_runtime(
 ) -> Dict[str, Any]:
     """Resolve project root, KB paths, and Salesforce org from cwd / env."""
     global _runtime, REPO_ROOT, KB_DIR, SFDC_NOTES_DIR, CODEBASE_NOTES_DIR
-    global PROJECT_NOTES_DIR, NEXTGEN2_NOTES_DIR, FLEET_DIR, FLEET_STATE, SCHEDULE_STATE
+    global PROJECT_NOTES_DIR, PROJECT_NOTES_DIR_ALIAS, FLEET_DIR, FLEET_STATE, SCHEDULE_STATE
     global GLOBAL_KB_DIR, GLOBAL_SFDC_NOTES_DIR
 
     if _runtime and not force:
@@ -349,7 +349,7 @@ def init_runtime(
     GLOBAL_SFDC_NOTES_DIR = GLOBAL_KB_DIR / "sfdc"
     CODEBASE_NOTES_DIR = KB_DIR / "codebase"
     PROJECT_NOTES_DIR = KB_DIR / "project"
-    NEXTGEN2_NOTES_DIR = PROJECT_NOTES_DIR
+    PROJECT_NOTES_DIR_ALIAS = PROJECT_NOTES_DIR
     FLEET_DIR = Path(ctx["fleetDir"])
     FLEET_STATE = FLEET_DIR / "state.json"
     SCHEDULE_STATE = FLEET_DIR / "schedule.json"

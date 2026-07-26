@@ -195,7 +195,7 @@ _FALLBACK_RULES = [
     (r"\bdesign\b|\barchitect\b|\bblueprint\b|\bframework\b",   "design"),
     (r"\bimplement\b|\bbuild\b|\bdevelop\b|\bcreate\b",         "implement"),
     (r"write.*apex|write.*lwc|add.*trigger|add.*field",         "implement"),
-    (r"\bjira\b|SFDCLQ-\d+",                                    "jira_only"),
+    (r"\bjira\b|[A-Z][A-Z0-9]+-\d+",                             "jira_only"),
 ]
 
 

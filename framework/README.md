@@ -25,8 +25,8 @@ python3 run.py agency-sync
 
 | Team | Agents / skills | Codebase topics |
 |------|-----------------|-----------------|
-| **UI/UX Team** | `codebase-explainer`, `playwright-e2e-validation` | LWC, Aura, flexipages, Pantheon UI |
-| **Salesforce Team** | `advanced-salesforce-developer`, `jira-subtask-workflow`, `codebase-explainer`, `sfdc-cta-mentor` | Apex, triggers, NextGen quoting, Pantheon CPQ |
+| **UI/UX Team** | `codebase-explainer`, `playwright-e2e-validation` | LWC, Aura, flexipages, custom UI |
+| **Salesforce Team** | `advanced-salesforce-developer`, `jira-subtask-workflow`, `codebase-explainer`, `sfdc-cta-mentor` | Apex, triggers, quoting, CPQ |
 | **Salesforce Admin Team** | `sfdc-metadata-sync`, `sfdc-promotion-workflow`, `jira-subtask-workflow` | Objects/fields, FLS, flows, manifests |
 
 ## Live dashboard
@@ -48,8 +48,8 @@ lsof -ti:8765 | xargs kill -9   # stop stale server
 
 **Always-on (optional):**
 ```bash
-cp launchd/com.servicetitan.dev-swarm-fleetview.plist ~/Library/LaunchAgents/
-launchctl load ~/Library/LaunchAgents/com.servicetitan.dev-swarm-fleetview.plist
+cp launchd/com.agency-swarm.dev-swarm-fleetview.plist ~/Library/LaunchAgents/
+launchctl load ~/Library/LaunchAgents/com.agency-swarm.dev-swarm-fleetview.plist
 ```
 
 Shows: team KB progress, active swarm agents, knowledge catalog, schedule status, registered skill agents.
@@ -65,7 +65,7 @@ START → plan → dispatch (requirements → design → dev → admin → qa �
 ```
 
 ```bash
-python3 run.py orchestrate "Implement Pantheon bundle view for SFDCLQ-7591"
+python3 run.py orchestrate "Implement quote line editor view for PROJ-1234"
 ```
 
 FleetView: enter request in **Supervisor orchestrator** box → **Run Orchestrator**.
@@ -128,12 +128,12 @@ python3 run.py skill-refresh-schedule           # in-process cron (keep terminal
 
 ```bash
 cd tools/sfdc-knowledge-swarm/launchd
-cp com.servicetitan.skill-refresh-daily.plist ~/Library/LaunchAgents/
-cp com.servicetitan.skill-refresh-weekly.plist ~/Library/LaunchAgents/
-cp com.servicetitan.skill-refresh-monthly.plist ~/Library/LaunchAgents/
-launchctl load ~/Library/LaunchAgents/com.servicetitan.skill-refresh-daily.plist
-launchctl load ~/Library/LaunchAgents/com.servicetitan.skill-refresh-weekly.plist
-launchctl load ~/Library/LaunchAgents/com.servicetitan.skill-refresh-monthly.plist
+cp com.agency-swarm.skill-refresh-daily.plist ~/Library/LaunchAgents/
+cp com.agency-swarm.skill-refresh-weekly.plist ~/Library/LaunchAgents/
+cp com.agency-swarm.skill-refresh-monthly.plist ~/Library/LaunchAgents/
+launchctl load ~/Library/LaunchAgents/com.agency-swarm.skill-refresh-daily.plist
+launchctl load ~/Library/LaunchAgents/com.agency-swarm.skill-refresh-weekly.plist
+launchctl load ~/Library/LaunchAgents/com.agency-swarm.skill-refresh-monthly.plist
 ```
 
 **Connected resources (Jira REST — optional, still 0 LLM tokens):**
@@ -142,7 +142,7 @@ launchctl load ~/Library/LaunchAgents/com.servicetitan.skill-refresh-monthly.pli
 export JIRA_URL="https://your-domain.atlassian.net"
 export JIRA_EMAIL="you@company.com"
 export JIRA_API_TOKEN="..."
-export JIRA_PROJECT_KEYS="SFDCLQ"
+export JIRA_PROJECT_KEYS="PROJ"
 ```
 
 Without credentials, connected refresh writes MCP checklists for Cursor (Atlassian + Google Workspace MCPs).
@@ -166,8 +166,8 @@ python3 run.py schedule              # dev + doc swarm
 **launchd** (weekly Sunday 02:15 — superseded by skill-refresh-daily for codebase):
 
 ```bash
-cp launchd/com.servicetitan.dev-development-swarm.plist ~/Library/LaunchAgents/
-launchctl load ~/Library/LaunchAgents/com.servicetitan.dev-development-swarm.plist
+cp launchd/com.agency-swarm.dev-development-swarm.plist ~/Library/LaunchAgents/
+launchctl load ~/Library/LaunchAgents/com.agency-swarm.dev-development-swarm.plist
 ```
 
 ## Knowledge base layout
@@ -177,7 +177,7 @@ knowledge-base/
   codebase/     ← dev swarm (force-app scan)
   connected/    ← Jira, Confluence, Drive/Sheets indexes
   skills/       ← MANIFEST.md + sync state
-  nextgen2/     ← org architecture notes
+  project/      ← your org's architecture notes
   sfdc/         ← public Salesforce docs (static or LLM)
   INDEX.md
 ```

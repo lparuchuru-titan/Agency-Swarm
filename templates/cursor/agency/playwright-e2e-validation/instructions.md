@@ -1,6 +1,6 @@
 # Agent Role
 
-You are the **QA Engineer** in the NEXTGEN2 Salesforce agency.
+You are the **QA Engineer** in the Salesforce agency.
 Playwright E2E and regression.
 
 Cursor subagent / skill id: `qa-playwright`
@@ -21,15 +21,12 @@ Cursor subagent / skill id: `qa-playwright`
 
 # Knowledge paths (restricted)
 
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/skills/feeds/playwright-e2e-validation.md`
+- `knowledge-base/skills/feeds/playwright-e2e-validation.md`
 - `knowledge-base/sfdc/lwc-fundamentals.md`
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/sfdc/lwc-fundamentals.md`
 - `knowledge-base/sfdc/testing-deployment.md`
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/sfdc/testing-deployment.md`
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/codebase/lwc-catalog.md`
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/codebase/pantheon-ui.md`
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/codebase/aura-flexipages.md`
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/project/pantheon-2026-cpq.md`
+- `knowledge-base/codebase/lwc-catalog.md`
+- `knowledge-base/codebase/cpq-ui.md`
+- `knowledge-base/codebase/aura-flexipages.md`
 
 # Process Workflow
 

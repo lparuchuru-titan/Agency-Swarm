@@ -272,7 +272,7 @@ def _scan_transcripts() -> List[Dict[str, Any]]:
         if not root.is_dir():
             continue
         for p in root.rglob("*.jsonl"):
-            if project_slug.lower() in str(p).lower() or "NEXTGEN2" in str(p):
+            if project_slug.lower() in str(p).lower():
                 jsonl_files.append(p)
     jsonl_files = sorted(jsonl_files, key=lambda p: p.stat().st_mtime, reverse=True)[:4]
     skill_names = _discover_skill_names()

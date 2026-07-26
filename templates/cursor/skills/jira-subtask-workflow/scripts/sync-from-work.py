@@ -93,7 +93,7 @@ def main() -> int:
                     files.append(full)
 
     buckets = classify_files(files)
-    org = cfg.get("defaultSandboxOrg", "NEXTGEN2")
+    org = cfg.get("defaultSandboxOrg", "")
 
     # Dev Task components
     dev_files = buckets["dev_task"]

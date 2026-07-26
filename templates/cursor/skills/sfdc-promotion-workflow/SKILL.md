@@ -2,16 +2,16 @@
 name: sfdc-promotion-workflow
 description: >-
   Track Salesforce sandbox deployments and promote validated changes to higher
-  environments via SFDC-CRM-SFDX. Creates feature branches from latest NextGenDev,
-  copies metadata from sandbox project to Master/main/default, and prepares commits
-  and PRs. Use when deploying to sandbox, tracking sandbox changes, preparing a
-  commit, creating a feature branch, promoting to NextGenQA/UAT, or moving code
-  through servicetitan/SFDC-CRM-SFDX.
+  environments via your production metadata repo. Creates feature branches from
+  the latest base branch, copies metadata from the sandbox project to the repo's
+  package directory, and prepares commits and PRs. Use when deploying to sandbox,
+  tracking sandbox changes, preparing a commit, creating a feature branch,
+  promoting to QA/UAT, or moving code through your metadata repo.
 ---
 
 # SFDC Promotion Workflow
 
-Track sandbox deployments and promote to **SFDC-CRM-SFDX** using the team's branch/PR pattern.
+Track sandbox deployments and promote to your **production metadata repo** using your team's branch/PR pattern.
 
 ## Context (folder + sandbox org)
 
@@ -24,9 +24,9 @@ python3 ~/.cursor/skills/_shared/show-context.py
 | Auto-detected | How |
 |---------------|-----|
 | Sandbox project | `sfdx-project.json` from cwd |
-| Source path | `force-app/...` or `Master/...` from sfdx-project.json |
+| Source path | `force-app/...` (or your configured package path) from sfdx-project.json |
 | Target org | Project `sf config get target-org` |
-| Promotion repo | Sibling `SFDC-CRM-SFDX` or `SFDC_PROMOTION_REPO` env |
+| Promotion repo | Sibling repo or `SFDC_PROMOTION_REPO` env |
 
 Optional overrides: `.cursor/sfdc-project/config.json`
 
@@ -38,26 +38,26 @@ Global skill: `~/.cursor/skills/sfdc-promotion-workflow/`
 
 Per-project config (create once per sandbox workspace): `.cursor/sfdc-promotion/config.json`
 
-## How the team promotes (SFDC-CRM-SFDX)
+## How the team promotes (example pattern — adapt to your repo)
 
 | Stage | Branch | Notes |
 |-------|--------|-------|
-| Sandbox dev | Local sandbox (e.g. NEXTGEN2) | Deploy with `sf project deploy` |
-| Feature work | `SFDCLQ-7591-Pantheon-Bundles` | Branch from latest `NextGenDev` |
-| PR merge | → `NextGenDev` | Commit format: `C-{branch}-V1` |
-| Higher env | `NextGenDev-To-NextGenQA-Merge_*` | Team merge branches to `NextGenQA` |
-| Production | `master` | AutoRABIT commits |
+| Sandbox dev | Local sandbox (e.g. MY_SANDBOX) | Deploy with `sf project deploy` |
+| Feature work | `PROJ-1234-short-description` | Branch from latest base branch (e.g. `main` or `develop`) |
+| PR merge | → base branch | Commit format per your team convention |
+| Higher env | Team merge branches | Promote to QA/UAT branch |
+| Production | `master` / `main` | Per your release process |
 
-**Path mapping** (critical):
+**Path mapping** (adjust to your repo layout):
 
 | Sandbox project | Promotion repo |
 |-----------------|----------------|
-| `force-app/main/default/` | `Master/main/default/` |
+| `force-app/main/default/` | `<package-dir>/main/default/` |
 
-**Repos (default for this user):**
+**Repos:**
 
-- Sandbox: `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2`
-- Promotion: `/Users/lakshmikanthparuchuru/SFDC/SFDC-CRM-SFDX`
+- Sandbox: `/path/to/your-sfdx-project`
+- Promotion: `/path/to/your-prod-metadata-repo`
 
 ## First-time setup (per sandbox project)
 
@@ -66,7 +66,7 @@ Copy the example config into the **sandbox project** (not the skill folder):
 ```bash
 mkdir -p .cursor/sfdc-promotion
 cp ~/.cursor/skills/sfdc-promotion-workflow/config.example.json .cursor/sfdc-promotion/config.json
-# Edit paths, epic, org alias
+# Edit paths, epic, org alias, base branch
 ```
 
 ## Agent workflow
@@ -77,25 +77,25 @@ Whenever the user deploys metadata to sandbox, **automatically track** the deplo
 
 ```bash
 python3 ~/.cursor/skills/sfdc-promotion-workflow/scripts/track-deploy.py \
-  --ticket SFDCLQ-7592 \
+  --ticket PROJ-1234 \
   --description "Product2 bundle fields" \
   --deploy-command "sf project deploy start ..." \
-  objects/Product2/fields/Bundle_SKU_Flag__c.field-meta.xml
+  objects/Product2/fields/Example_Flag__c.field-meta.xml
 ```
 
 Or track directories:
 
 ```bash
 python3 ~/.cursor/skills/sfdc-promotion-workflow/scripts/track-deploy.py \
-  -t SFDCLQ-7591 -d "Pantheon CPQ metadata" \
-  objects/Bundle_Definition__c permissionsets/NextGen_Quoting_Access_Test.permissionset-meta.xml
+  -t PROJ-1234 -d "CPQ bundle metadata" \
+  objects/Bundle_Definition__c permissionsets/Quoting_Access_Test.permissionset-meta.xml
 ```
 
 Or from git diff in sandbox project:
 
 ```bash
 cd <sandbox-project>
-python3 ~/.cursor/skills/sfdc-promotion-workflow/scripts/track-deploy.py --from-git -t SFDCLQ-7591
+python3 ~/.cursor/skills/sfdc-promotion-workflow/scripts/track-deploy.py --from-git -t PROJ-1234
 ```
 
 Updates:
@@ -116,14 +116,14 @@ When the user says "prepare commit", "create feature branch", or "promote to rep
 
 ```bash
 python3 ~/.cursor/skills/sfdc-promotion-workflow/scripts/prepare-feature-branch.py \
-  --ticket SFDCLQ-7591 \
-  --description "Pantheon-Bundles"
+  --ticket PROJ-1234 \
+  --description "example-bundles"
 ```
 
 This **always**:
-1. `git fetch` + `git pull` latest `NextGenDev` in SFDC-CRM-SFDX
+1. `git fetch` + `git pull` latest base branch in the promotion repo
 2. Creates/checks out feature branch on top of latest base
-3. Copies tracked files: sandbox `force-app/` → repo `Master/main/default/`
+3. Copies tracked files: sandbox `force-app/` → repo package directory
 4. `git add` staged files
 5. Writes `last-promotion-summary.md` with PR template
 
@@ -133,33 +133,33 @@ To commit when ready:
 
 ```bash
 python3 ~/.cursor/skills/sfdc-promotion-workflow/scripts/prepare-feature-branch.py \
-  --ticket SFDCLQ-7591 --description "Pantheon-Bundles" --commit
+  --ticket PROJ-1234 --description "example-bundles" --commit
 ```
 
 Then push and open PR:
 
 ```bash
-cd /Users/lakshmikanthparuchuru/SFDC/SFDC-CRM-SFDX
-git push -u origin SFDCLQ-7591-Pantheon-Bundles
-gh pr create --repo servicetitan/SFDC-CRM-SFDX \
-  --base NextGenDev \
-  --head SFDCLQ-7591-Pantheon-Bundles \
-  --title "SFDCLQ-7591: Pantheon 2026 Max Bundles CPQ metadata"
+cd /path/to/your-prod-metadata-repo
+git push -u origin PROJ-1234-example-bundles
+gh pr create --repo your-org/your-prod-metadata-repo \
+  --base main \
+  --head PROJ-1234-example-bundles \
+  --title "PROJ-1234: Example bundle metadata"
 ```
 
 Only push/create PR when the user explicitly asks.
 
 ## Branch naming conventions
 
-Match team patterns:
+Match your team's patterns — example:
 
 | Pattern | Example |
 |---------|---------|
-| `{ticket}-{description}` | `SFDCLQ-7591-Pantheon-Bundles` |
-| `local-{ticket}-V1` | `local-SFDCLQ-7592-V1` |
-| Short feature name | `nextgen-quotereadservice` |
+| `{ticket}-{description}` | `PROJ-1234-example-bundles` |
+| `local-{ticket}-V1` | `local-PROJ-1234-V1` |
+| Short feature name | `example-quotereadservice` |
 
-Commit message: `C-{branch-name}-V1` (e.g. `C-SFDCLQ-7591-Pantheon-Bundles-V1`)
+Commit message: `C-{branch-name}-V1` (e.g. `C-PROJ-1234-example-bundles-V1`) — or whatever convention your team uses.
 
 ## Tracking files (per sandbox project)
 
@@ -175,11 +175,11 @@ Do not commit tracker files unless the team wants shared changelog in repo.
 ## Rules
 
 - **Always pull latest base branch** before creating feature branch
-- **Never** copy into wrong path — always `Master/main/default/` in SFDC-CRM-SFDX
+- **Never** copy into wrong path — always your repo's `<package-dir>/main/default/`
 - **Track after every sandbox deploy** so promotion is accurate
 - **Do not push** without user confirmation
 - **Do not commit** without user confirmation (unless they said "prepare and commit")
-- Pantheon / NextGen work targets `NextGenDev` PR base, not `master`
+- Feature work targets your configured base branch, not the production branch directly
 
 ## Scripts
 

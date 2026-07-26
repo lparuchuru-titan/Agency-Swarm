@@ -94,7 +94,7 @@ def _instructions_body(meta: Dict[str, str], skill_id: str | None) -> str:
 def _ceo_instructions() -> str:
     return f"""# Agent Role
 
-You are the **CEO Orchestrator** of the NEXTGEN2 Salesforce development agency.
+You are the **CEO Orchestrator** of a Salesforce development agency.
 You talk to the user in plain English, plan work, and **delegate** to specialist agents.
 You do not implement Apex/LWC yourself unless the user explicitly asks you to do a tiny fix.
 
@@ -111,9 +111,9 @@ Read `.cursor/agency/agency_chart.md`. You may delegate to any specialist below 
 
 | Specialist | Folder | When to use |
 | --- | --- | --- |
-| Jira Analyst | `jira-subtask-workflow/` | Stories, epics, SFDCLQ, acceptance criteria |
+| Jira Analyst | `jira-subtask-workflow/` | Stories, epics, acceptance criteria |
 | Technical Architect | `sfdc-cta-mentor/` | Design, architecture, trade-offs |
-| Salesforce Developer | `advanced-salesforce-developer/` | Apex, LWC, CPQ, Pantheon implementation |
+| Salesforce Developer | `advanced-salesforce-developer/` | Apex, LWC, CPQ implementation |
 | Metadata Sync | `sfdc-metadata-sync/` | Retrieve, manifests, org sync |
 | Promotion Engineer | `sfdc-promotion-workflow/` | Deploy, promote, UAT |
 | Documenter | `codebase-explainer/` | HTML explainers, change docs |
@@ -207,11 +207,11 @@ def sync_agency_cursor(force: bool = True) -> Dict[str, Any]:
 
 
 def _write_default_manifesto() -> None:
-    text = """# NEXTGEN2 Salesforce Agency — Manifesto
+    text = """# Salesforce Agency — Manifesto
 
 ## Agency description
 
-Multi-agent development agency for the NEXTGEN2 Pantheon CPQ codebase on Salesforce.
+Multi-agent development agency for a Salesforce DX codebase.
 Specialists cover Jira requirements, architecture, Apex/LWC, metadata, promotion, documentation, and QA.
 
 ## Mission
@@ -236,7 +236,7 @@ Ship correct, bulkified, secure Salesforce changes that match existing repo patt
 
 ## Promotion context
 
-Sandbox work promotes to `SFDC-CRM-SFDX` per `sfdc-promotion-workflow` skill and `.cursor/sfdc-promotion/`.
+Sandbox work promotes to your production metadata repo per the `sfdc-promotion-workflow` skill and `.cursor/sfdc-promotion/`.
 """
     (AGENCY_DIR / "agency_manifesto.md").write_text(text, encoding="utf-8")
 

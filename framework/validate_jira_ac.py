@@ -2,8 +2,10 @@
 """Validate repo metadata against Jira story acceptance criteria (layouts, fields).
 
 Usage:
-  python3 tools/sfdc-knowledge-swarm/validate_jira_ac.py SFDCLQ-7592
-  python3 tools/sfdc-knowledge-swarm/validate_jira_ac.py SFDCLQ-7592 --target-org NEXTGEN2
+  python3 tools/sfdc-knowledge-swarm/validate_jira_ac.py PROJ-1001
+  python3 tools/sfdc-knowledge-swarm/validate_jira_ac.py PROJ-1001 --target-org MY_SANDBOX
+
+Register story -> metadata AC checks in STORY_CHECKS below for your project.
 """
 from __future__ import annotations
 
@@ -17,19 +19,17 @@ REPO = Path(__file__).resolve().parents[2]
 LAYOUTS = REPO / "force-app/main/default/layouts"
 FIELDS = REPO / "force-app/main/default/objects"
 
+# Example — replace with your project's story -> metadata AC mapping.
 STORY_CHECKS: dict[str, dict] = {
-    "SFDCLQ-7592": {
-        "title": "Product2 Pantheon fields",
+    "PROJ-1001": {
+        "title": "Product2 example custom fields",
         "fields": [
-            "Product2/fields/Bundle_SKU_Flag__c.field-meta.xml",
-            "Product2/fields/Visible_On_Quote_UI__c.field-meta.xml",
-            "Product2/fields/Credit_Value__c.field-meta.xml",
-            "Product2/fields/Credit_Bonus_Pct__c.field-meta.xml",
-            "Product2/fields/Credit_Scope__c.field-meta.xml",
+            "Product2/fields/Example_Flag__c.field-meta.xml",
+            "Product2/fields/Example_Value__c.field-meta.xml",
         ],
-        "layout": "docs/reference/layouts/Product2-CPQ Product Layout-pantheon-section.layout-meta.xml",
-        "layout_member": "Product2-SBQQ__CPQ Product Layout",
-        "layout_fields": ["Bundle_SKU_Flag__c", "Visible_On_Quote_UI__c"],
+        "layout": "docs/reference/layouts/Product2-Product Layout-example-section.layout-meta.xml",
+        "layout_member": "Product2-Product Layout",
+        "layout_fields": ["Example_Flag__c", "Example_Value__c"],
     },
 }
 
@@ -105,7 +105,7 @@ def org_layout_has_fields(org: str, layout_member: str, field_apis: list[str]) -
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("story", help="Jira key e.g. SFDCLQ-7592")
+    parser.add_argument("story", help="Jira key e.g. PROJ-1001")
     parser.add_argument("--target-org", help="Optional org alias to verify deployed layout")
     args = parser.parse_args()
 

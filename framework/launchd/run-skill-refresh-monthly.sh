@@ -2,7 +2,7 @@
 # Monthly deep check — LLM synthesis for stale open docs only (max 2 topics by default).
 set -euo pipefail
 
-REPO="/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2"
+REPO="${AGENCY_SWARM_PROJECT_REPO:-/path/to/your-sfdx-project}"
 LOG="$REPO/tools/sfdc-knowledge-swarm/skill-refresh-monthly.log"
 cd "$REPO/tools/sfdc-knowledge-swarm"
 

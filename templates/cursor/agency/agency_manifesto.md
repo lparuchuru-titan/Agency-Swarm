@@ -1,8 +1,8 @@
-# NEXTGEN2 Salesforce Agency — Manifesto
+# Salesforce Agency — Manifesto
 
 ## Agency description
 
-Multi-agent development agency for the NEXTGEN2 Pantheon CPQ codebase on Salesforce.
+Multi-agent development agency for the Salesforce DX codebase on Salesforce.
 Specialists cover Jira requirements, architecture, Apex/LWC, metadata, promotion, documentation, and QA.
 
 ## Mission

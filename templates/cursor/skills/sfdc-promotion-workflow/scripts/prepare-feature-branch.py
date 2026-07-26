@@ -51,7 +51,7 @@ def main() -> int:
     parser.add_argument("-b", "--branch", help="Feature branch name")
     parser.add_argument("-t", "--ticket", help="Jira ticket")
     parser.add_argument("-d", "--description", help="Short description for branch name")
-    parser.add_argument("--base-branch", help="Base branch to pull (default: NextGenDev)")
+    parser.add_argument("--base-branch", help="Base branch to pull (default: main)")
     parser.add_argument("--commit-message", help="Commit message (default: C-{branch}-V1)")
     parser.add_argument("--commit", action="store_true", help="Create commit after staging")
     parser.add_argument("--dry-run", action="store_true", help="Show actions without copying")
@@ -65,10 +65,10 @@ def main() -> int:
         print("Nothing pending promotion. Track a sandbox deploy first.")
         return 1
 
-    ticket = args.ticket or cfg.get("currentEpic", "SFDCLQ-change")
+    ticket = args.ticket or cfg.get("currentEpic", "PROJ-change")
     description = args.description or cfg.get("currentEpicTitle", "")
     branch = args.branch or suggest_branch_name(cfg, ticket, description)
-    base_branch = args.base_branch or cfg.get("defaultBaseBranch", "NextGenDev")
+    base_branch = args.base_branch or cfg.get("defaultBaseBranch", "main")
     commit_message = args.commit_message or suggest_commit_message(branch)
     rel_files = [item["path"] for item in pending]
 
@@ -132,7 +132,7 @@ def main() -> int:
         print("Committed. Next steps:")
         print(f"  git push -u {remote} {branch}")
         print(
-            f"  gh pr create --repo servicetitan/SFDC-CRM-SFDX "
+            f"  gh pr create --repo your-org/your-prod-metadata-repo "
             f"--base {promotion_record['targetBranch']} --head {branch}"
         )
     else:

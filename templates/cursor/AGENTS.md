@@ -1,4 +1,4 @@
-# NEXTGEN2 Salesforce Agency (Cursor template)
+# Salesforce Agency (Cursor template)
 
 This repo uses an **Agency Swarm-style** layout from [Agency-Swarm](https://github.com/lparuchuru-titan/Agency-Swarm) — plain-English roles, CEO delegation, per-agent instructions.
 

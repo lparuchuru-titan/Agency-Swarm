@@ -9,8 +9,8 @@ description: >-
   teach me, architecture overview, end-to-end flow.
 
   <example>
-  user: "Explain how Pantheon bundles work and show me in HTML."
-  assistant: "I'll launch codebase-explainer to search code, Jira SFDCLQ-7591,
+  user: "Explain how our CPQ bundles work and show me in HTML."
+  assistant: "I'll launch codebase-explainer to search code, Jira PROJ-1234,
   Confluence, and Drive, then write docs/explainers/*.html."
   </example>
 ---

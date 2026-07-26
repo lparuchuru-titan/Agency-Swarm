@@ -257,7 +257,7 @@
 
         const cats = kb.categories || {};
         document.getElementById('kb-summary').textContent =
-          `codebase ${cats.codebase?.written}/${cats.codebase?.total} · nextgen2 ${cats.nextgen2?.written}/${cats.nextgen2?.total} · sfdc ${cats.sfdc?.written}/${cats.sfdc?.total}`;
+          `codebase ${cats.codebase?.written}/${cats.codebase?.total} · project ${cats.project?.written}/${cats.project?.total} · sfdc ${cats.sfdc?.written}/${cats.sfdc?.total}`;
         document.getElementById('kb-body').innerHTML = (kb.topics || []).slice(0, 30).map(t =>
           `<tr><td>${esc(t.category)}</td><td>${esc(TEAM[t.team]?.name || t.team || '—')}</td>
           <td>${esc(t.title)}</td><td><span class="agent-status ${stClass(t.status)}">${esc(t.status)}</span></td></tr>`

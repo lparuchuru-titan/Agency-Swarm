@@ -1,6 +1,6 @@
 {
-  "jiraProjectKey": "SFDCLQ",
-  "jiraBaseUrl": "https://servicetitan.atlassian.net",
+  "jiraProjectKey": "PROJ",
+  "jiraBaseUrl": "https://yourcompany.atlassian.net",
   "confluenceSpaceKeys": [],
   "driveSearchHints": [],
   "localDocPaths": [

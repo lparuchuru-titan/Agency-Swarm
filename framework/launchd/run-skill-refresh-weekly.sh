@@ -2,7 +2,7 @@
 # Weekly skill refresh — connected indexes + open doc static fetch (0 tokens).
 set -euo pipefail
 
-REPO="/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2"
+REPO="${AGENCY_SWARM_PROJECT_REPO:-/path/to/your-sfdx-project}"
 LOG="$REPO/tools/sfdc-knowledge-swarm/skill-refresh-weekly.log"
 cd "$REPO/tools/sfdc-knowledge-swarm"
 

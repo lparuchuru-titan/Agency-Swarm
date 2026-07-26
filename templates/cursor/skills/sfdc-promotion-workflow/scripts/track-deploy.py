@@ -25,7 +25,7 @@ from lib import (  # noqa: E402
 def main() -> int:
     parser = argparse.ArgumentParser(description="Track sandbox deployment files")
     parser.add_argument("files", nargs="*", help="Files or directories relative to sandbox source")
-    parser.add_argument("-t", "--ticket", help="Jira ticket (e.g. SFDCLQ-7592)")
+    parser.add_argument("-t", "--ticket", help="Jira ticket (e.g. PROJ-1001)")
     parser.add_argument("-d", "--description", help="Short description of the change")
     parser.add_argument("-c", "--deploy-command", help="Deploy command used")
     parser.add_argument("--from-git", action="store_true", help="Track changed files from git status")

@@ -14,7 +14,7 @@ def main() -> int:
     root = find_project_root()
     tf = tracker_path(root)
     if not tf.exists():
-        print("No tracker. Run init-story.py SFDCLQ-xxxx")
+        print("No tracker. Run init-story.py PROJ-xxxx")
         return 1
     t = load_json(tf)
     print(f"Parent: {t.get('parentKey')} — {t.get('parentSummary', '')}")

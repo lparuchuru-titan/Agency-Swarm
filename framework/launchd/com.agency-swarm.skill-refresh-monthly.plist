@@ -3,10 +3,10 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.servicetitan.skill-refresh-monthly</string>
+    <string>com.agency-swarm.skill-refresh-monthly</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/tools/sfdc-knowledge-swarm/launchd/run-skill-refresh-monthly.sh</string>
+        <string>/path/to/your-sfdx-project/tools/sfdc-knowledge-swarm/launchd/run-skill-refresh-monthly.sh</string>
     </array>
     <key>StartCalendarInterval</key>
     <dict>
@@ -20,8 +20,8 @@
     <key>RunAtLoad</key>
     <false/>
     <key>StandardOutPath</key>
-    <string>/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/tools/sfdc-knowledge-swarm/skill-refresh-monthly.launchd.out.log</string>
+    <string>/path/to/your-sfdx-project/tools/sfdc-knowledge-swarm/skill-refresh-monthly.launchd.out.log</string>
     <key>StandardErrorPath</key>
-    <string>/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/tools/sfdc-knowledge-swarm/skill-refresh-monthly.launchd.err.log</string>
+    <string>/path/to/your-sfdx-project/tools/sfdc-knowledge-swarm/skill-refresh-monthly.launchd.err.log</string>
 </dict>
 </plist>

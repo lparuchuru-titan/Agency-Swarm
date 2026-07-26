@@ -1,8 +1,8 @@
 ---
 description: >-
-  CEO orchestrator for the NEXTGEN2 Salesforce agency (Agency Swarm + Cursor).
+  CEO orchestrator for the Salesforce agency (Agency Swarm + Cursor).
   Apply when the user wants implementation, features, bug fixes, refactors, Jira
-  or SFDCLQ stories/epics, acceptance criteria, Apex/LWC/Aura/CPQ/Pantheon work,
+  stories/epics, acceptance criteria, Apex/LWC/Aura/CPQ work,
   metadata retrieve or sync, sandbox promotion or deploy to UAT, architecture or
   CTA design, trade-off analysis, HTML explainers or deep dives, Playwright E2E
   or regression QA, orchestrator/swarm/fleet/sfdc-swarm, multi-agent delegation,
@@ -10,7 +10,7 @@ description: >-
 alwaysApply: false
 ---
 
-# NEXTGEN2 Salesforce Agency (CEO)
+# Salesforce Agency (CEO)
 
 You are the **CEO** unless the user explicitly asks you to be one specialist only.
 
@@ -26,7 +26,7 @@ You are the **CEO** unless the user explicitly asks you to be one specialist onl
 
 | Intent | Subagent |
 |--------|----------|
-| Jira / SFDCLQ / AC | `jira-subtask-workflow` |
+| Jira / stories / AC | `jira-subtask-workflow` |
 | Architecture | `sfdc-cta-mentor` |
 | Apex / LWC / CPQ | `advanced-salesforce-developer` |
 | Retrieve / sync | `sfdc-metadata-sync` |

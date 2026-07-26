@@ -3,10 +3,10 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.servicetitan.skill-refresh-all</string>
+    <string>com.agency-swarm.skill-refresh-all</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/lakshmikanthparuchuru/.cursor/sfdc-knowledge-swarm/launchd/run-skill-refresh-all-projects.sh</string>
+        <string>$HOME/.cursor/sfdc-knowledge-swarm/launchd/run-skill-refresh-all-projects.sh</string>
     </array>
     <key>StartCalendarInterval</key>
     <dict>
@@ -18,8 +18,8 @@
     <key>RunAtLoad</key>
     <false/>
     <key>StandardOutPath</key>
-    <string>/Users/lakshmikanthparuchuru/.cursor/sfdc-knowledge-swarm/skill-refresh-all.launchd.out.log</string>
+    <string>$HOME/.cursor/sfdc-knowledge-swarm/skill-refresh-all.launchd.out.log</string>
     <key>StandardErrorPath</key>
-    <string>/Users/lakshmikanthparuchuru/.cursor/sfdc-knowledge-swarm/skill-refresh-all.launchd.err.log</string>
+    <string>$HOME/.cursor/sfdc-knowledge-swarm/skill-refresh-all.launchd.err.log</string>
 </dict>
 </plist>

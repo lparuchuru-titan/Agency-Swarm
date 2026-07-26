@@ -2,7 +2,7 @@
 # Daily skill refresh — codebase static scan + skill manifest (0 tokens).
 set -euo pipefail
 
-REPO="/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2"
+REPO="${AGENCY_SWARM_PROJECT_REPO:-/path/to/your-sfdx-project}"
 LOG="$REPO/tools/sfdc-knowledge-swarm/skill-refresh-daily.log"
 cd "$REPO/tools/sfdc-knowledge-swarm"
 

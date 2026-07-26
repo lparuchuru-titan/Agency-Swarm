@@ -156,7 +156,7 @@ def cmd_orchestrate(args: argparse.Namespace) -> None:
 
     user_input = args.input.strip()
     if not user_input:
-        console.print("[red]Provide input text, e.g. orchestrate \"Implement Pantheon bundle view\"[/]")
+        console.print("[red]Provide input text, e.g. orchestrate \"Implement quote line editor view\"[/]")
         sys.exit(1)
     console.print(f"[bold]Orchestrator[/] — routing: {user_input[:80]}…")
     result = run_orchestrator(user_input)
@@ -339,7 +339,7 @@ def main() -> None:
     sub.add_parser("context", help="Show resolved project + Salesforce org").set_defaults(func=cmd_context)
 
     p_orch = sub.add_parser("orchestrate", help="Run supervisor orchestrator on user input")
-    p_orch.add_argument("input", help="User request (e.g. Implement Pantheon bundle for SFDCLQ-7591)")
+    p_orch.add_argument("input", help="User request (e.g. Implement quote line editor for PROJ-1234)")
     p_orch.set_defaults(func=cmd_orchestrate)
 
     sub.add_parser("agency-sync", help="Sync Agency Swarm-style .cursor/agency folders").set_defaults(

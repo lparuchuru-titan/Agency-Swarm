@@ -24,7 +24,7 @@ OPEN_DOC_STATIC_MAX_CHARS = int(os.environ.get("SKILL_OPEN_STATIC_MAX", "6000"))
 CONNECTED_MAX_ITEMS = int(os.environ.get("SKILL_CONNECTED_MAX_ITEMS", "40"))
 
 # Jira project keys to index when credentials are set
-JIRA_PROJECT_KEYS = os.environ.get("JIRA_PROJECT_KEYS", "SFDCLQ").split(",")
+JIRA_PROJECT_KEYS = [k for k in os.environ.get("JIRA_PROJECT_KEYS", "").split(",") if k]
 
 # Paths
 CONNECTED_KB_DIR_NAME = "connected"

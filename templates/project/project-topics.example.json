@@ -1,10 +1,10 @@
 [
   {"key": "00-architecture-overview", "team": "salesforce-dev", "title": "Architecture overview"},
-  {"key": "nextgen-quoting-runtime", "team": "salesforce-dev", "title": "NextGen quoting runtime"},
-  {"key": "lookupdata-rule-engine", "team": "salesforce-dev", "title": "LookupData rule engine"},
-  {"key": "stcb-billing-subsystem", "team": "salesforce-dev", "title": "STCB billing"},
-  {"key": "amendment-renewal-usage-rating", "team": "salesforce-dev", "title": "Amendment & usage"},
-  {"key": "ai-agent-subsystem", "team": "salesforce-dev", "title": "AI agent subsystem"},
-  {"key": "pantheon-2026-cpq", "team": "salesforce-dev", "title": "Pantheon 2026 CPQ"},
+  {"key": "apex-trigger-framework", "team": "salesforce-dev", "title": "Apex trigger framework"},
+  {"key": "lwc-ui-patterns", "team": "ui-ux", "title": "LWC UI patterns"},
+  {"key": "cpq-quoting-runtime", "team": "salesforce-dev", "title": "CPQ quoting runtime"},
+  {"key": "metadata-sync-and-fls", "team": "salesforce-admin", "title": "Metadata sync & FLS"},
+  {"key": "promotion-and-release", "team": "salesforce-admin", "title": "Promotion & release"},
+  {"key": "testing-and-e2e", "team": "qa", "title": "Testing & E2E"},
   {"key": "data-model-and-automation", "team": "salesforce-admin", "title": "Data model & automation"}
 ]

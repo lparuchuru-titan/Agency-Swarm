@@ -2,9 +2,9 @@
 
 **Salesforce multi-agent framework for Cursor** — CEO orchestration, specialist agents, LangGraph planning, FleetView dashboard, and token-aware knowledge refresh.
 
-Source of truth for swarm code. Consumer Salesforce DX projects (e.g. NEXTGEN2) link here instead of vendoring copies under `tools/`.
+Source of truth for swarm code. Consumer Salesforce DX projects link here instead of vendoring copies under `tools/`.
 
-Inspired by [Agency Swarm](https://github.com/VRSEN/agency-swarm) and adapted for enterprise Salesforce delivery (CPQ, metadata sync, sandbox promotion, Jira AC).
+Inspired by [Agency Swarm](https://github.com/VRSEN/agency-swarm) and adapted for Salesforce delivery (Apex, LWC, metadata sync, sandbox promotion, Jira acceptance criteria).
 
 ---
 
@@ -70,7 +70,7 @@ Creates:
 - `.cursor/agency/`, `.cursor/agents/`, `.cursor/rules/`
 - `AGENTS.md` (if missing)
 
-### 3. Use from the project
+### 3. Use from your project
 
 ```bash
 sfdc-swarm context                              # resolve org from .sf/config.json
@@ -101,14 +101,14 @@ After pulling changes in Agency-Swarm:
 ```bash
 cd Agency-Swarm && git pull
 ./framework/install-global.sh                  # refresh global copy
-cd /path/to/NEXTGEN2
+cd /path/to/your-sfdx-project
 ./path/to/Agency-Swarm/scripts/install-to-project.sh --global-skills .
 ```
 
 Regenerate agency folders from registry (optional):
 
 ```bash
-cd /path/to/NEXTGEN2
+cd /path/to/your-sfdx-project
 sfdc-swarm agency-sync
 ```
 
@@ -129,7 +129,7 @@ sfdc-swarm agency-sync
 Change agents or skill feeds in `framework/agents_registry.py`, then:
 
 ```bash
-cd /path/to/NEXTGEN2   # or any wired project
+cd /path/to/your-sfdx-project   # or any wired project
 sfdc-swarm agency-sync
 ```
 
@@ -139,4 +139,4 @@ Commit changes in **this repo** (`framework/`, `templates/`). Consumer projects 
 
 ## License
 
-Internal ServiceTitan tooling. Adjust license as needed for your org.
+[MIT](LICENSE)

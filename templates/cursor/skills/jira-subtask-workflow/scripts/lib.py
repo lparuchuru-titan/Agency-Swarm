@@ -105,8 +105,8 @@ def load_config(root: Path | None = None) -> dict:
 
     defaults = {
         "projectRoot": ctx["projectRoot"],
-        "jiraBaseUrl": dot.get("jiraBaseUrl", ctx.get("jiraBaseUrl", "https://servicetitan.atlassian.net")),
-        "projectKey": dot.get("projectKey", dot.get("jiraProjectKey", ctx.get("jiraProjectKey", "SFDCLQ"))),
+        "jiraBaseUrl": dot.get("jiraBaseUrl", ctx.get("jiraBaseUrl", "https://yourcompany.atlassian.net")),
+        "projectKey": dot.get("projectKey", dot.get("jiraProjectKey", ctx.get("jiraProjectKey", "PROJ"))),
         "defaultSandboxOrg": ctx.get("targetOrgAlias"),
         "parentStoryKey": dot.get("parentStoryKey", ctx.get("parentStoryKey", "")),
         "subtaskIssueType": dot.get("subtaskIssueType", "Sub-task"),
@@ -286,7 +286,7 @@ def component_entries(files: list[str], source_path: str) -> list[dict]:
 
 
 def jira_credentials() -> tuple[str, str, str] | None:
-    base = os.environ.get("JIRA_BASE_URL", "https://servicetitan.atlassian.net").rstrip("/")
+    base = os.environ.get("JIRA_BASE_URL", "https://yourcompany.atlassian.net").rstrip("/")
     email = os.environ.get("JIRA_EMAIL") or os.environ.get("ATLASSIAN_EMAIL")
     token = os.environ.get("JIRA_API_TOKEN") or os.environ.get("ATLASSIAN_API_TOKEN")
     if email and token:

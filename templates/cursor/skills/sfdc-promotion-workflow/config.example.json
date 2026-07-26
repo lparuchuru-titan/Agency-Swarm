@@ -4,9 +4,9 @@
   "promotionRepoRoot": null,
   "promotionSourcePath": null,
   "promotionRemote": "origin",
-  "defaultBaseBranch": "NextGenDev",
-  "defaultPrTargetBranch": "NextGenDev",
-  "jiraProjectKey": "SFDCLQ",
+  "defaultBaseBranch": "main",
+  "defaultPrTargetBranch": "main",
+  "jiraProjectKey": "PROJ",
   "parentStoryKey": null,
   "currentEpic": null,
   "currentEpicTitle": null

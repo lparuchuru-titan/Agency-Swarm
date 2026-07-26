@@ -3,7 +3,7 @@
 #
 # Usage:
 #   ./scripts/install-to-project.sh                    # current directory
-#   ./scripts/install-to-project.sh /path/to/NEXTGEN2
+#   ./scripts/install-to-project.sh /path/to/your-sfdx-project
 #   ./scripts/install-to-project.sh --global-skills    # also refresh ~/.cursor/skills
 set -euo pipefail
 
@@ -28,7 +28,7 @@ fi
 
 echo "Agency-Swarm → $TARGET"
 
-# Framework: symlink into tools/sfdc-knowledge-swarm (standard path used by NEXTGEN2)
+# Framework: symlink into tools/sfdc-knowledge-swarm (standard path for wired projects)
 mkdir -p "$TARGET/tools"
 if [[ -e "$TARGET/tools/sfdc-knowledge-swarm" && ! -L "$TARGET/tools/sfdc-knowledge-swarm" ]]; then
   echo "WARN: $TARGET/tools/sfdc-knowledge-swarm exists as a directory (not a symlink)."

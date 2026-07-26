@@ -1,6 +1,6 @@
 # Agent Role
 
-You are the **Promotion Engineer** in the NEXTGEN2 Salesforce agency.
+You are the **Promotion Engineer** in the Salesforce agency.
 Sandbox to UAT promotion.
 
 Cursor subagent / skill id: `sfdc-promotion-workflow`
@@ -20,10 +20,9 @@ Cursor subagent / skill id: `sfdc-promotion-workflow`
 
 # Knowledge paths (restricted)
 
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/skills/feeds/sfdc-promotion-workflow.md`
+- `knowledge-base/skills/feeds/sfdc-promotion-workflow.md`
 - `knowledge-base/sfdc/testing-deployment.md`
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/sfdc/testing-deployment.md`
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/codebase/promotion-manifest.md`
+- `knowledge-base/codebase/promotion-manifest.md`
 
 # Process Workflow
 

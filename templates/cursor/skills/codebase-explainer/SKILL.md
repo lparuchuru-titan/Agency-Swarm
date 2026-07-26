@@ -33,7 +33,7 @@ Copy this checklist and complete every step before writing HTML:
 
 ```
 Explainer progress:
-- [ ] 1. Parse question (topic, entities, SFDCLQ-#### keys, LWC/Apex names)
+- [ ] 1. Parse question (topic, entities, Jira ticket keys, LWC/Apex names)
 - [ ] 2. Codebase search (semantic + grep + read key files)
 - [ ] 3. Local docs (docs/, README, runbooks, knowledge-base)
 - [ ] 4. Jira (tickets, epic/story, acceptance criteria)
@@ -69,7 +69,7 @@ Search project paths (from config or defaults):
 
 ```bash
 curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
-  "$JIRA_BASE_URL/rest/api/3/issue/SFDCLQ-7591?fields=summary,description,status"
+  "$JIRA_BASE_URL/rest/api/3/issue/PROJ-1001?fields=summary,description,status"
 ```
 
 Extract: summary, description, acceptance criteria, subtasks, status, links.
@@ -131,14 +131,14 @@ Never invent Jira tickets, Confluence pages, or Drive doc content.
 
 ## Examples
 
-**User:** "Explain how Pantheon bundle quoting works end to end."
+**User:** "Explain how quote line calculation works end to end."
 
-1. Search codebase: `PantheonBundle`, `Bundle_Definition`, `nextGenQuotingBase`.
-2. Read `docs/Pantheon2026_CPQ_Sandbox_Runbook.md` if present.
-3. Jira: `SFDCLQ-7591`, child stories 7592–7595.
-4. Confluence: search "Pantheon CPQ".
-5. Drive: search "Pantheon 2026 CPQ".
-6. Write `docs/explainers/20260616-pantheon-bundle-quoting.html`.
+1. Search codebase: calculator plugin, quote line services, price rules.
+2. Read any local runbooks under `docs/` if present.
+3. Jira: related story keys from your project (e.g. `PROJ-1001`).
+4. Confluence: search "quoting" / "CPQ calculation".
+5. Drive: search product design docs for quoting.
+6. Write `docs/explainers/YYYYMMDD-quote-line-calculation.html`.
 
 **User:** "Explain SBQQ__LookupData__c and show me in HTML."
 
@@ -159,4 +159,4 @@ Template: `templates/explanation.html` in the skill folder.
 ## Related skills
 
 - `advanced-salesforce-developer` — implementation guardrails while reading code
-- `jira-subtask-workflow` — Jira credentials and SFDCLQ patterns
+- `jira-subtask-workflow` — Jira credentials and project key patterns

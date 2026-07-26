@@ -1,6 +1,6 @@
 # Agent Role
 
-You are the **Metadata Sync** in the NEXTGEN2 Salesforce agency.
+You are the **Metadata Sync** in the Salesforce agency.
 Retrieve, delta sync, manifests.
 
 Cursor subagent / skill id: `sfdc-metadata-sync`
@@ -22,18 +22,15 @@ Cursor subagent / skill id: `sfdc-metadata-sync`
 
 # Knowledge paths (restricted)
 
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/skills/feeds/sfdc-metadata-sync.md`
+- `knowledge-base/skills/feeds/sfdc-metadata-sync.md`
 - `knowledge-base/sfdc/flows-automation.md`
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/sfdc/flows-automation.md`
 - `knowledge-base/sfdc/testing-deployment.md`
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/sfdc/testing-deployment.md`
 - `knowledge-base/sfdc/security-sharing.md`
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/sfdc/security-sharing.md`
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/codebase/metadata-model.md`
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/codebase/security-fls.md`
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/codebase/flows-declarative.md`
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/codebase/promotion-manifest.md`
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/project/data-model-and-automation.md`
+- `knowledge-base/codebase/metadata-model.md`
+- `knowledge-base/codebase/security-fls.md`
+- `knowledge-base/codebase/flows-declarative.md`
+- `knowledge-base/codebase/promotion-manifest.md`
+- `knowledge-base/project/data-model-and-automation.md`
 
 # Process Workflow
 

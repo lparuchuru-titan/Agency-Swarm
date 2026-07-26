@@ -25,7 +25,6 @@ FLEET_RUNS = FLEET_DIR / "runs"
 _NODE = (
     shutil.which("node")
     or os.environ.get("NODE_PATH", "")
-    or "/Users/lakshmikanthparuchuru/.local/node/bin/node"
     or "node"
 )
 _RUNNER = str(Path(__file__).parent / "cursor_agent_runner.js")

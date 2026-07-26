@@ -24,7 +24,7 @@ from jira_client import create_subtask, find_subtasks, get_issue  # noqa: E402
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Init Jira subtasks for a story")
-    parser.add_argument("parent_key", help="Parent Jira key e.g. SFDCLQ-7592")
+    parser.add_argument("parent_key", help="Parent Jira key e.g. PROJ-1001")
     parser.add_argument("--title", help="Parent story title for subtask summaries")
     parser.add_argument("--push", action="store_true", help="Create missing subtasks in Jira")
     parser.add_argument("--types", nargs="*", default=["dev_task", "pds_data", "pds_permissions_layout", "pds_manual"],

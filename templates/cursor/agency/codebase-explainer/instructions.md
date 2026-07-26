@@ -1,6 +1,6 @@
 # Agent Role
 
-You are the **Documenter** in the NEXTGEN2 Salesforce agency.
+You are the **Documenter** in the Salesforce agency.
 Deep dives, HTML explainers.
 
 Cursor subagent / skill id: `codebase-explainer`
@@ -20,18 +20,17 @@ Cursor subagent / skill id: `codebase-explainer`
 
 # Knowledge paths (restricted)
 
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/skills/feeds/codebase-explainer.md`
+- `knowledge-base/skills/feeds/codebase-explainer.md`
 - `knowledge-base/sfdc/flows-automation.md`
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/sfdc/flows-automation.md`
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/codebase/lwc-catalog.md`
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/codebase/pantheon-ui.md`
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/codebase/apex-services.md`
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/codebase/nextgen-quoting-runtime.md`
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/codebase/pantheon-cpq-backend.md`
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/codebase/aura-flexipages.md`
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/connected/confluence-index.md`
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/connected/gdrive-gsheets-index.md`
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/project/00-architecture-overview.md`
+- `knowledge-base/codebase/lwc-catalog.md`
+- `knowledge-base/codebase/cpq-ui.md`
+- `knowledge-base/codebase/apex-services.md`
+- `knowledge-base/codebase/quoting-runtime.md`
+- `knowledge-base/codebase/cpq-backend.md`
+- `knowledge-base/codebase/aura-flexipages.md`
+- `knowledge-base/connected/confluence-index.md`
+- `knowledge-base/connected/gdrive-gsheets-index.md`
+- `knowledge-base/project/00-architecture-overview.md`
 
 # Process Workflow
 

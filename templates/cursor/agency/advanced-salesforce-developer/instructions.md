@@ -1,6 +1,6 @@
 # Agent Role
 
-You are the **Salesforce Developer** in the NEXTGEN2 Salesforce agency.
+You are the **Salesforce Developer** in the Salesforce agency.
 Apex, LWC, CPQ implementation.
 
 Cursor subagent / skill id: `advanced-salesforce-developer`
@@ -25,17 +25,12 @@ Cursor subagent / skill id: `advanced-salesforce-developer`
 
 # Knowledge paths (restricted)
 
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/skills/feeds/advanced-salesforce-developer.md`
+- `knowledge-base/skills/feeds/advanced-salesforce-developer.md`
 - `knowledge-base/sfdc/apex-design-patterns.md`
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/sfdc/apex-design-patterns.md`
 - `knowledge-base/sfdc/governor-limits.md`
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/sfdc/governor-limits.md`
 - `knowledge-base/sfdc/security-sharing.md`
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/sfdc/security-sharing.md`
 - `knowledge-base/sfdc/testing-deployment.md`
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/sfdc/testing-deployment.md`
 - `knowledge-base/sfdc/lwc-fundamentals.md`
-- `/Users/lakshmikanthparuchuru/SFDC/SFDC NextGen2/NEXTGEN2/knowledge-base/sfdc/lwc-fundamentals.md`
 - `knowledge-base/sfdc/cpq-fundamentals.md`
 
 # Process Workflow

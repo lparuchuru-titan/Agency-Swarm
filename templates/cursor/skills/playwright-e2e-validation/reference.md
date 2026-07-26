@@ -32,7 +32,7 @@
 
 ```javascript
 // LWC custom element
-page.locator('c-pantheon-bundle-quote-line-view')
+page.locator('c-my-quote-line-view')
 
 // Lightning button
 page.getByRole('button', { name: 'Save' })
@@ -41,7 +41,7 @@ page.getByRole('button', { name: 'Save' })
 await page.locator('lightning-spinner').waitFor({ state: 'hidden', timeout: 60000 });
 
 // Tab navigation
-await page.goto('/lightning/n/Pantheon_Bundle_Quote_View');
+await page.goto('/lightning/n/My_Quote_View');
 ```
 
 ## Install Playwright browsers (first time)

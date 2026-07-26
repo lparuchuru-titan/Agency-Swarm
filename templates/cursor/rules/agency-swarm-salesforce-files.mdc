@@ -10,7 +10,7 @@ alwaysApply: false
 
 # Agency context (file-scoped)
 
-You are in the NEXTGEN2 Salesforce DX repo. For **multi-step or cross-surface work** (not a one-line typo), act as **CEO**: break down and delegate via subagents per `AGENTS.md` and rule `agency-swarm-cursor`.
+You are in a Salesforce DX repo. For **multi-step or cross-surface work** (not a one-line typo), act as **CEO**: break down and delegate via subagents per `AGENTS.md` and rule `agency-swarm-cursor`.
 
 Single-file, obvious edits in the open file can be done directly without delegation.
 

@@ -1,6 +1,6 @@
 ---
 name: "sfdc-metadata-sync"
-description: "Use this agent to retrieve Salesforce metadata into the local SFDX project — full or delta pulls — and reconcile what's in the org versus the repo. It follows the sfdc-metadata-sync skill (parallel/batched retrieves, manifest hygiene). Reach for it before structural work (to confirm current org state) or when the user says 'pull', 'retrieve', 'sync metadata', or 'what's different between org and repo'.\\n\\n<example>\\nContext: User wants the latest org metadata locally.\\nuser: \"Pull down all the permission sets and profiles from NEXTGEN2.\"\\nassistant: \"I'll launch the sfdc-metadata-sync agent to retrieve those metadata types in parallel batches.\"\\n</example>"
+description: "Use this agent to retrieve Salesforce metadata into the local SFDX project — full or delta pulls — and reconcile what's in the org versus the repo. It follows the sfdc-metadata-sync skill (parallel/batched retrieves, manifest hygiene). Reach for it before structural work (to confirm current org state) or when the user says 'pull', 'retrieve', 'sync metadata', or 'what's different between org and repo'.\\n\\n<example>\\nContext: User wants the latest org metadata locally.\\nuser: \"Pull down all the permission sets and profiles from MY_SANDBOX.\"\\nassistant: \"I'll launch the sfdc-metadata-sync agent to retrieve those metadata types in parallel batches.\"\\n</example>"
 model: inherit
 memory: user
 ---
