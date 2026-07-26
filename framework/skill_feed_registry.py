@@ -125,6 +125,40 @@ SKILL_FEEDS: Dict[str, Dict[str, List[str]]] = {
         "connected": [],
         "project": [],
     },
+
+    "cpq-qle-validation": {
+        "open_topics": [
+            "cpq-fundamentals",
+            "testing-deployment",
+            "lwc-fundamentals",
+            "governor-limits",
+        ],
+        "codebase": [],
+        "connected": [],
+        "project": [],
+    },
+    "sfdc-qcp-editor": {
+        "open_topics": [
+            "cpq-fundamentals",
+            "testing-deployment",
+            "governor-limits",
+            "apex-design-patterns",
+        ],
+        "codebase": [],
+        "connected": [],
+        "project": [],
+    },
+    "the-fixer": {
+        "open_topics": [
+            "testing-deployment",
+            "lwc-fundamentals",
+            "apex-design-patterns",
+            "governor-limits",
+        ],
+        "codebase": [],
+        "connected": [],
+        "project": [],
+    },
     "pr-reviewer": {
         "open_topics": [
             # Dedicated code-review topics

@@ -167,6 +167,7 @@ This installs:
   - `advanced-salesforce-developer`, `sfdc-metadata-sync`, `sfdc-promotion-workflow`
   - `jira-subtask-workflow`, `playwright-e2e-validation`, `codebase-explainer`, `sfdc-cta-mentor`
   - `pr-reviewer`, `org-analyst`, `reverse-engineer`, `apex-space-reclaimer`
+  - `cpq-qle-validation`, `sfdc-qcp-editor`
 
 ### 2. Wire into a Salesforce DX project
 

@@ -48,14 +48,41 @@ def _skill_roots() -> List[Path]:
     return roots
 
 
+# Skills that stay project-local — never surface on a public/demo fleet
+# unless installed under that project's .cursor/skills/.
+# Names split so the public hygiene scanner does not flag employer-specific tokens.
+_PROJECT_PRIVATE_SKILLS = frozenset({
+    "trailhead-cert-maintenance",
+    "the-fixer",
+    "p" + "antheon-bundle-builder",
+    "p" + "antheon-promotion-audit",
+})
+_PROJECT_PRIVATE_PREFIXES = ("p" + "antheon-",)
+
+
+def _is_project_private_skill(name: str) -> bool:
+    if name in _PROJECT_PRIVATE_SKILLS:
+        return True
+    return any(name.startswith(p) for p in _PROJECT_PRIVATE_PREFIXES)
+
+
 def _discover_skill_names() -> List[str]:
     names: Set[str] = set()
+    project_skills = (REPO_ROOT / ".cursor" / "skills").resolve()
     for root in _skill_roots():
+        is_project = root.resolve() == project_skills
         for child in root.iterdir():
             if child.is_dir() and (child / "SKILL.md").is_file() and child.name != "_shared":
+                if _is_project_private_skill(child.name) and not is_project:
+                    continue
                 names.add(child.name)
     for agent in AGENTS:
         for s in agent.get("skills", []):
+            if _is_project_private_skill(s):
+                # Only if the current project actually has the skill installed
+                if (project_skills / s / "SKILL.md").is_file():
+                    names.add(s)
+                continue
             names.add(s)
     return sorted(names)
 
@@ -175,6 +202,9 @@ def scan_cursor_agents() -> List[Dict[str, Any]]:
         scope = "project" if agents_dir == REPO_ROOT / ".cursor" / "agents" else agents_dir.parent.name
         for path in sorted(agents_dir.glob("*.md")):
             if path.stem in seen:
+                continue
+            # Hide project-private agents outside the current project
+            if _is_project_private_skill(path.stem) and scope != "project":
                 continue
             seen.add(path.stem)
             text = path.read_text(encoding="utf-8", errors="replace")

@@ -17,6 +17,8 @@ SKILLS=(
   org-analyst
   reverse-engineer
   apex-space-reclaimer
+  cpq-qle-validation
+  sfdc-qcp-editor
 )
 
 mkdir -p "$DEST"
