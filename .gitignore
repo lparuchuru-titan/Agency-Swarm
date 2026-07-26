@@ -23,3 +23,6 @@ framework/knowledge-base/skills/sync-state.json
 # Runtime logs
 framework/*.log
 framework/fleet-server.*.log
+
+# Local demo fixture for recordings
+.demo-sfdx/

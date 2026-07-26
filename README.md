@@ -8,6 +8,33 @@ Inspired by [Agency Swarm](https://github.com/VRSEN/agency-swarm) and adapted fo
 
 ---
 
+## Live demo (video)
+
+FleetView walkthrough recorded against a local Agency-Swarm install (fixture SFDX project — no customer org data):
+
+**[▶ Watch demo video](docs/blog/assets/agency-swarm-fleetview-demo.webm)** · [Poster image](docs/blog/assets/agency-swarm-fleetview-poster.png)
+
+<video src="docs/blog/assets/agency-swarm-fleetview-demo.webm" controls width="100%" poster="docs/blog/assets/agency-swarm-fleetview-poster.png">
+  Your browser does not support HTML5 video. <a href="docs/blog/assets/agency-swarm-fleetview-demo.webm">Download the demo</a>.
+</video>
+
+What the recording shows:
+
+1. **Skills Fleet** (`/skills-fleet.html`) — agents, skills, fleet health  
+2. **Orchestrator home** (`/`) — run pipeline / delivery view  
+3. **Swarm Fleet** + **Dev Swarm** dashboards  
+
+Re-record locally (requires Playwright + browsers):
+
+```bash
+# terminal 1 — from a wired SFDX project
+sfdc-swarm serve --port 8770
+
+# terminal 2 — from a project that has playwright installed
+export PLAYWRIGHT_BROWSERS_PATH="$HOME/Library/Caches/ms-playwright"
+FLEET_URL=http://127.0.0.1:8770 OUT_DIR=/tmp/agency-rec   node path/to/Agency-Swarm/scripts/record-fleetview-demo.mjs
+```
+
 ## Prerequisites
 
 Install these **before** cloning. Agency-Swarm will not work without them.
