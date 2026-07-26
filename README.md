@@ -8,6 +8,87 @@ Inspired by [Agency Swarm](https://github.com/VRSEN/agency-swarm) and adapted fo
 
 ---
 
+## Prerequisites
+
+Install these **before** cloning. Agency-Swarm will not work without them.
+
+### Required
+
+| Tool | Min version | Why | Install | Verify |
+|------|-------------|-----|---------|--------|
+| **[Cursor IDE](https://cursor.com)** | Latest | Host for agents, skills, and CEO orchestration | Download from cursor.com | Open Cursor |
+| **[Salesforce CLI](https://developer.salesforce.com/tools/salesforcecli)** (`sf`) | v2+ | Org context, retrieve/deploy, SOQL | `npm install -g @salesforce/cli` | `sf --version` |
+| **[Python](https://www.python.org/)** | 3.9+ (3.11 recommended) | CLI, LangGraph orchestrator, FleetView | `brew install python@3.11` or python.org | `python3 --version` |
+| **[Node.js](https://nodejs.org/)** | 18+ | Cursor SDK agent runner (`cursor_agent_runner.js`) | `brew install node` or nodejs.org | `node --version` |
+| **[Git](https://git-scm.com/)** | Any | Clone + install scripts | `brew install git` | `git --version` |
+| **Salesforce DX project** | — | Must contain `sfdx-project.json` | Your existing SFDX repo | `ls sfdx-project.json` |
+
+macOS one-liner for CLI tools:
+
+```bash
+brew install node python@3.11 git
+npm install -g @salesforce/cli
+```
+
+Also ensure `~/.local/bin` is on your `PATH` (the `sfdc-swarm` shim is installed there):
+
+```bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc
+```
+
+### Python packages (required for orchestrator)
+
+```bash
+pip install -r framework/requirements.txt
+```
+
+Installs: `langgraph`, `langchain`, `langchain-anthropic`, `rich`, `httpx`, `schedule`.  
+FleetView (`sfdc-swarm serve`) itself uses the Python standard library only, but the CLI still imports these packages.
+
+### Node packages (required for live Cursor agents)
+
+After `./install.sh`, install the Cursor SDK into the global swarm home:
+
+```bash
+cd /tmp && npm install @cursor/sdk @bufbuild/protobuf
+mkdir -p ~/.cursor/sfdc-knowledge-swarm/node_modules
+cp -r /tmp/node_modules/@cursor ~/.cursor/sfdc-knowledge-swarm/node_modules/
+cp -r /tmp/node_modules/@bufbuild ~/.cursor/sfdc-knowledge-swarm/node_modules/
+```
+
+### Salesforce org (required for real org work)
+
+```bash
+sf org login web --alias MY_SANDBOX --instance-url https://test.salesforce.com
+cd /path/to/your-sfdx-project
+sf config set target-org MY_SANDBOX
+sfdc-swarm context   # should show project + org
+```
+
+No org alias is hardcoded. The swarm reads `.sf/config.json` / `sf config get target-org`.
+
+### Optional (enable richer features)
+
+| Item | Env / setup | What it unlocks |
+|------|-------------|-----------------|
+| **Cursor API key** | `export CURSOR_API_KEY=cursor_...` ([dashboard](https://cursor.com/dashboard/integrations)) | Live specialist agents during `orchestrate` (without it, teams run in offline stub mode) |
+| **Anthropic API key** | `export ANTHROPIC_API_KEY=sk-ant-...` | LangChain LLM intent router fallback |
+| **Atlassian MCP** | Cursor MCP for Jira/Confluence | Jira Analyst / Confluence feeds |
+| **Google Workspace MCP** | Cursor MCP for Drive/Docs/Sheets | Drive/Sheets research agents |
+| **`swarm.config.json`** | Copy from repo root into your SFDX project | Jira project key, promotion repo hints |
+
+### What works with zero API keys
+
+These work after prerequisites + install only (no `CURSOR_API_KEY`):
+
+- `sfdc-swarm --help` / `context` / `fleet` / `agency-sync`
+- `sfdc-swarm serve` (FleetView dashboard)
+- `sfdc-swarm skill-refresh --tier manifest|weekly` (token-light KB refresh)
+- Offline `orchestrate` routing + work-order scaffolding
+- `python3 tests/test_framework.py` (full E2E suite)
+
+Live Apex/LWC implementation via Cursor agents needs `CURSOR_API_KEY`.
+
 ## Repository layout
 
 ```
@@ -134,9 +215,6 @@ sfdc-swarm agency-sync
 ```
 
 Commit changes in **this repo** (`framework/`, `templates/`). Consumer projects pick them up via `git pull` + `install-to-project.sh`.
-
----
-
 
 ---
 
