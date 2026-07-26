@@ -3,7 +3,10 @@
 
 Requires:
   export ELEVENLABS_API_KEY=...
-  pip install elevenlabs imageio-ffmpeg requests
+  pip install elevenlabs imageio-ffmpeg
+
+Instant Voice Cloning needs a paid ElevenLabs plan. On free tier this script fails at IVC;
+use a stock voice fallback or upgrade for your cloned voice.
 
 Usage:
   python3 scripts/narrate-fleetview-demo.py
