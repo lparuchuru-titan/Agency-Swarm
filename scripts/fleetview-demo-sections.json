@@ -1,0 +1,34 @@
+[
+  {
+    "id": "intro",
+    "text": "Hey everyone. Quick tour of Agency Swarm."
+  },
+  {
+    "id": "skills_overview",
+    "text": "This is the Skills Fleet. Each card is a specialist skill — developer, reviewer, metadata sync, and so on. The feed count on each card tells you whether that skill has the knowledge it needs. Green means healthy."
+  },
+  {
+    "id": "sync_feeds",
+    "text": "I'm clicking Sync Skill Feeds. That refreshes knowledge links for every skill — no language-model tokens — just wiring docs and indexes back to the right agents. Watch the cards update."
+  },
+  {
+    "id": "feed_detail",
+    "text": "Now look at one skill's feed list. You can see exactly which Salesforce topics and local files that agent is allowed to read. Specialists stay focused. They don't pull the whole org into context."
+  },
+  {
+    "id": "orchestrator",
+    "text": "Next, Orchestrator home. This is where a plain English request becomes a plan. You don't ask one mega chat to do everything. The orchestrator breaks work into orders, then Cursor specialists execute them."
+  },
+  {
+    "id": "dev_swarm",
+    "text": "On Dev Swarm, here's Run Orchestrator. You'd type something like: review Apex changes and outline a test plan. Then hit run, and watch the pipeline assign the right agents."
+  },
+  {
+    "id": "swarm_fleet",
+    "text": "Swarm Fleet is the live status board — what's running, what finished, what failed."
+  },
+  {
+    "id": "outro",
+    "text": "That's the loop. Keep feeds healthy. Let the CEO plan. Let specialists ship. Agency Swarm."
+  }
+]
