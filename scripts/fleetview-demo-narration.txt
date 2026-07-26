@@ -1,0 +1,11 @@
+Welcome to Agency Swarm — a Salesforce multi-agent framework for Cursor.
+
+First, Skills Fleet. Each specialist skill shows its knowledge feeds, health, and which agents use it. Healthy feeds mean the skill has the docs and indexes it needs before you ask it to work.
+
+Next, the Orchestrator home. This is where you turn a plain-English request into structured work orders — plan first, then hand off to specialists in Cursor.
+
+Here is the Swarm Fleet view — live status for runs and agents across your project.
+
+And Dev Swarm — the developer control plane for scanning the org and refreshing skill knowledge without burning tokens.
+
+Back to Skills Fleet. CEO orchestrates. Specialists implement. Knowledge stays fresh. That is Agency Swarm.

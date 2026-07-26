@@ -26,3 +26,6 @@ framework/fleet-server.*.log
 
 # Local demo fixture for recordings
 .demo-sfdx/
+
+# Local voice clone refs (do not publish)
+docs/blog/assets/voice/
