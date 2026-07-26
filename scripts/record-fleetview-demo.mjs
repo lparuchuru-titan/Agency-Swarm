@@ -11,7 +11,10 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname, '..');
+// Prefer explicit AGENCY_ROOT — script is sometimes copied into a Playwright project to resolve deps.
+const ROOT = process.env.AGENCY_ROOT
+  ? path.resolve(process.env.AGENCY_ROOT)
+  : path.resolve(__dirname, '..');
 const BASE = process.env.FLEET_URL || 'http://127.0.0.1:8771';
 const OUT = process.env.OUT_DIR || '/tmp/agency-swarm-recording';
 const TIMINGS_PATH =
