@@ -29,7 +29,7 @@ to `SBQQ__TranspiledCode__c` on save. A bad edit silently breaks calculation
 ## The protocol (every edit)
 
 ```bash
-ORG="<username>"; ID="<QCP record Id>"   # NG2 aAvdy0000000HIbCAM ; QA aAv1P0000004CPCSA2
+ORG="<username>"; ID="<QCP record Id>"
 BK="backups/qcp-<ticket>-$(date +%Y%m%d)"   # (pass date in; scripts can't call Date.now)
 mkdir -p "$BK"
 # 1. BACKUP source + transpiled
@@ -53,13 +53,6 @@ Empty/204 response = success. (`curl` + token gave `INVALID_AUTH_HEADER`; use `s
 - `overrideUsageQuoteLinesPrice(...)` — usage-meter net handling (e.g. a ProductCode exclusion list).
 - Loaded-field lists `SBQQ__QuoteFields__c` / `SBQQ__QuoteLineFields__c` — NEWLINE/LF-separated, one API name per line, no commas/blank lines. **A rule referencing a field NOT in these lists → FATAL global `opType` crash.** Add fields to the list and activate together.
 
-## Gotchas from real incidents
-
-- **Deterministic two-way returns** when behavior must be identical across orgs whose defaults differ: `return line.SBQQ__Quote__r.MultiTenantDeal__c === true;` (editable iff MT) beats an unlock-only `if(MT) return true;` — the latter is a no-op where the default is already editable.
-- **`isFieldEditableForObject` only affects the QLE grid cell** (render). It does NOT stop CPQ from re-asserting a bundle-child quantity on Calculate — that's ProductOption config (`Type`, `Quantity`), not the QCP.
-- Pre-measure the target env's actual baseline bytes; NG2 has run within ~26–283 bytes of the cap — trim `/* */` comments before adding.
-- After PATCH, if the transpiled didn't change, the save didn't take — investigate before assuming success.
-- Back up ANY record before updating; keep the `backups/qcp-*` dir per episode.
 
 ## Related skills
 

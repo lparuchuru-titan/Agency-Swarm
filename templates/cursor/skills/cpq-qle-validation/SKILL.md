@@ -78,13 +78,6 @@ an editable `<input>` when an editable cell is activated. So:
 - `std-config-build.spec.js` — build a FRESH quote via the Standard configurator (Add Products → Configure → Save) so option config is exercised.
 - `std-edit-save.spec.js` — edit → Calculate → Save, then verify via SOQL.
 
-## Gotchas (each cost real debug time)
-
-- **Segmented/ramp quotes** hide the top-level Quantity column (SEGMENT columns instead) → the parent control can't open → whole run is invalid. Use a single-segment quote to test top-level qty.
-- **Product-selection grid filter** (`SBQQ__SearchFilter__c`) hides a bundle if `Teams_Allowed_to_Sell__c` ≠ the running user's `User_Team__c` (formula off `Owner.Team__c`). DML-built quotes skip this; the configurator path hits it. Temporarily set the user's team, build, then revert it.
-- **NextGen custom LWC quoting** (`c-next-gen-quoting-base`) is a DIFFERENT surface that does NOT run the QCP and flattens options to independent lines — don't conflate it with the Standard QLE. Confirm which tool the user means.
-- Always scan for `opType` / "de-reference a null object" / Plugin Error in console + page text — an org-wide QCP crash surfaces there.
-- Reads over an existing quote can show a **stale grid value** vs the DB — verify the DB via SOQL, don't trust the grid alone.
 
 ## Related skills
 
